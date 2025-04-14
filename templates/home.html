@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="en" data-bs-theme="light">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Irradiation Portal</title>
+    <link rel="icon" href="/static/favicon/favicon.svg" type="image/svg+xml">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/static/styles.css">
+</head>
+<style>
+:root {
+  --primary-gradient: linear-gradient(135deg, #0d6efd 0%, #0b5ed7 100%);
+  --secondary-gradient:linear-gradient(135deg, rgba(13, 110, 253, 0.7) 0%, rgba(11, 94, 215, 0.7) 100%);
+}
+
+body {
+  font-family: 'Inter', sans-serif;
+  line-height: 1.6;
+}
+
+.hero {
+  background: var(--secondary-gradient), url('/static/images/background.jpg') center center/cover no-repeat;
+  color: #fff;
+  padding: 120px 0 100px;
+  position: relative;
+  overflow: hidden;
+}
+
+.hero h1 {
+  font-size: 3.75rem;
+  font-weight: 700;
+  letter-spacing: -0.025em;
+  margin-bottom: 1.5rem;
+}
+
+.hero .lead {
+  font-size: 1.35rem;
+  max-width: 700px;
+  margin: 0 auto 2rem;
+}
+
+.feature-card {
+  background: #fff;
+  border: 1px solid rgba(13, 110, 253, 0.15);
+  border-radius: 12px;
+  padding: 2rem;
+  transition: all 0.3s ease;
+  margin-bottom: 1.5rem;
+}
+
+.feature-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 10px 20px rgba(13, 110, 253, 0.1);
+}
+
+.features-icon {
+  font-size: 2.5rem;
+  color: #0d6efd;
+  margin-bottom: 1rem;
+}
+
+.section-title {
+  font-weight: 700;
+  letter-spacing: -0.015em;
+  margin-bottom: 3rem;
+}
+
+.about-img {
+  border-radius: 12px;
+  box-shadow: 0 15px 30px rgba(0, 0, 0, 0.1);
+}
+
+.cta-section {
+  background: var(--primary-gradient);
+  color: #fff;
+  padding: 4rem 0;
+  text-align: center;
+}
+
+footer {
+  background: #1a1d23;
+  color: rgba(255, 255, 255, 0.85);
+  padding: 3rem 0 2rem;
+}
+
+@media (max-width: 768px) {
+  .hero h1 {
+    font-size: 2.5rem;
+  }
+
+  .hero .lead {
+    font-size: 1.1rem;
+  }
+}
+
+</style>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary shadow-sm fixed-top">
+        <div class="container">
+            <a class="navbar-brand d-flex align-items-center" href="{{ url_for('home') }}">
+                <i class="bi bi-sun fs-4 me-2"></i>
+                <span class="font-weight-bold">Irradiation Portal</span>
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item mx-2">
+                        <a class="nav-link active" href="{{ url_for('index') }}">Data Services</a>
+                    </li>
+                    <li class="nav-item mx-2">
+                        <a class="nav-link" href="{{ url_for('documentation') }}">Documentation</a>
+                    </li>
+                    <li class="nav-item mx-2">
+                        <a class="nav-link" href="{{ url_for('help') }}">Support</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section class="hero">
+        <div class="container position-relative">
+            <div class="text-center">
+                <h1 class="display-4 fw-bold mb-4">Solar Irradiance Data Portal</h1>
+                <p class="lead mb-5">Empowering renewable energy decisions through precision modeling and intelligent data visualization</p>
+                <a href="{{ url_for('index') }}" class="btn btn-light btn-lg px-5 py-3 rounded-pill fw-semibold">
+                    Data Services <i class="bi bi-arrow-right-circle ms-2"></i>
+                </a>
+            </div>
+        </div>
+    </section>
+
+    <!-- Features Section -->
+    <section class="py-5">
+        <div class="container">
+            <h2 class="text-center section-title mb-5">Platform Features</h2>
+            <div class="row g-4">
+                <div class="col-lg-4">
+                    <div class="feature-card text-center">
+                        <i class="bi bi-cloud-sun-fill features-icon"></i>
+                        <h4 class="h3 mb-3">Advanced Modeling</h4>
+                        <p class="text-muted">Combining empirical models with AI models to provide unbiased irradiance data
+                        </p>
+                    </div>
+                </div>
+                <div class="col-lg-4">
+                    <div class="feature-card text-center">
+                        <i class="bi bi-bar-chart-line features-icon"></i>
+                        <h4 class="h3 mb-3">Interactive Analytics</h4>
+                        <p class="text-muted">Dynamic visualization tools and customizable dashboards for deep data exploration</p>
+                    </div>
+                </div>
+                <div class="col-lg-4">
+                    <div class="feature-card text-center">
+                        <i class="bi bi-database features-icon"></i>
+                        <h4 class="h3 mb-3">Data Management</h4>
+                        <p class="text-muted">Seamless export capabilities with API access and multiple format support (CSV, JSON)</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- About Section -->
+    <section class="bg-light py-5">
+        <div class="container">
+            <div class="row align-items-center g-5">
+                <div class="col-lg-6">
+                    <img src="/static/solar_panel.jpg" alt="Solar Analytics" class="img-fluid about-img">
+                </div>
+                <div class="col-lg-6">
+                    <h2 class="section-title mb-4">Precision Solar Intelligence</h2>
+                    <p class="lead text-muted mb-4">Our platform integrates cutting-edge meteorological data with machine learning algorithms to deliver the most accurate solar irradiance predictions available.</p>
+                    <div class="d-grid gap-3">
+                        <div class="d-flex align-items-center">
+                            <i class="bi bi-check2-circle text-primary me-3 fs-5"></i>
+                            <span>Real-time solar Irradiance predictions</span>
+                        </div>
+                        <div class="d-flex align-items-center">
+                            <i class="bi bi-check2-circle text-primary me-3 fs-5"></i>
+                            <span>Historical data analysis & future projections</span>
+                        </div>
+                        <div class="d-flex align-items-center">
+                            <i class="bi bi-check2-circle text-primary me-3 fs-5"></i>
+                            <span>Multi-location comparative analysis</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- CTA Section -->
+    <section class="cta-section">
+        <div class="container">
+            <div class="text-center">
+                <h2 class="text-white mb-4">Ready to Optimize Your Solar Strategy?</h2>
+                <p class="text-white-50 mb-5">Join hundreds of energy professionals already making data-driven decisions</p>
+                <a href="{{ url_for('index') }}" class="btn btn-outline-light btn-lg px-5 py-3 rounded-pill fw-semibold">
+                    Get Started Now
+                </a>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer>
+        <div class="container">
+            <div class="row g-4">
+                <div class="col-lg-4">
+                    <h5 class="text-white mb-4">Irradiation Portal</h5>
+                    <p class="text-white-50">Advanced analytics platform for solar energy professionals</p>
+                </div>
+                <div class="col-lg-2">
+                    <h6 class="text-white mb-3">Resources</h6>
+                    <ul class="list-unstyled">
+                        <li><a href="#" class="text-white-50 text-decoration-none">Documentation</a></li>
+                        <li><a href="#" class="text-white-50 text-decoration-none">API Reference</a></li>
+                        <li><a href="#" class="text-white-50 text-decoration-none">Case Studies</a></li>
+                    </ul>
+                </div>
+                <div class="col-lg-2">
+                    <h6 class="text-white mb-3">Support</h6>
+                    <ul class="list-unstyled">
+                        <li><a href="#" class="text-white-50 text-decoration-none">Contact Us</a></li>
+                        <li><a href="#" class="text-white-50 text-decoration-none">Knowledge Base</a></li>
+                        <li><a href="#" class="text-white-50 text-decoration-none">Service Status</a></li>
+                    </ul>
+                </div>
+                <div class="col-lg-4">
+                    <h6 class="text-white mb-3">Stay Updated</h6>
+                    <div class="input-group">
+                        <input type="email" class="form-control" placeholder="Enter your email">
+                        <button class="btn btn-primary" type="button">Subscribe</button>
+                    </div>
+                </div>
+            </div>
+            <hr class="my-4 border-white-10">
+            <div class="text-center text-white-50 pt-2">
+                <p class="mb-0">&copy; {{ datetime.utcnow().year }} Irradiation Portal. All rights reserved.</p>
+                <p class="mb-0">Developed by Marconi Lab</p>
+            </div>
+        </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

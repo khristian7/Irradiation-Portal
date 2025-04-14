@@ -1,0 +1,206 @@
+<!doctype html>
+<html lang="en" data-bs-theme="light">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Irradiation Portal</title>
+    
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+    />
+    
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css"
+    />
+    <link rel="stylesheet" href="/static/styles.css" />
+  </head>
+  <body class="bg-light d-flex flex-column min-vh-100">
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary shadow-sm">
+      <div class="container-fluid">
+        <a class="navbar-brand d-flex align-items-center" href="{{ url_for('home') }}">
+          <i class="bi bi-sun fs-4 me-2"></i>
+          <h3 class="text-white">Irradiation Portal</h3>
+        </a>
+        <button
+          class="navbar-toggler"
+          type="button"
+          data-bs-toggle="collapse"
+          data-bs-target="#navbarNav"
+        >
+          <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarNav">
+          <ul class="navbar-nav ms-auto">
+              <li class="nav-item">
+                  <a class="nav-link" href="{{ url_for('home') }}">
+                      <i class="bi bi-file-earmark-text me-1"></i>Home
+                  </a>
+              </li>
+
+            <li class="nav-item">
+              <a class="nav-link" href="{{ url_for('documentation') }}">
+                <i class="bi bi-file-earmark-text me-1"></i>Documentation
+              </a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="{{ url_for('help') }}">
+                <i class="bi bi-question-circle me-1"></i>Help
+              </a>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </nav>
+<div class="container my-5">
+    <div class="documentation-content">
+        <h1 class="display-4 mb-5 text-primary border-bottom pb-3">Documentation</h1>
+
+        <section class="mb-5">
+            <h2 class="h3 mb-3 fw-bold">Overview & Purpose</h2>
+            <p class="lead">
+                This solar irradiance forecasting tool provides real-time predictions of sunlight availability, 
+                enabling users to monitor and anticipate solar radiation levels for specific geographic locations. 
+                Leveraging AI-driven nowcasting models, the system delivers accurate short-term forecasts to assist:
+            </p>
+            <ul class="list-unstyled">
+                <li class="mb-2">☀️ Solar energy developers in optimizing power generation</li>
+                <li class="mb-2">🔬 Researchers in renewable energy studies</li>
+                <li class="mb-2">🏗️ Infrastructure planners in grid management</li>
+            </ul>
+        </section>
+
+        <section class="mb-5">
+            <h2 class="h3 mb-3 fw-bold">Nowcasting Methodology</h2>
+            <div class="card border-0 shadow-sm">
+                <div class="card-body">
+                    <p class="card-text">
+                        Our nowcasting system generates short-term forecasts (15 minutes to 6 hours ahead) through:
+                    </p>
+                    <div class="row g-4">
+                        <div class="col-md-6">
+                            <div class="p-3 bg-light rounded">
+                                <h4 class="h6 text-muted mb-2">Data Integration</h4>
+                                <ul class="list-styled">
+                                    <li>Meteorological station data</li>
+                                    <li>Satellite observations</li>
+                                    <li>Weather model outputs</li>
+                                </ul>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="p-3 bg-light rounded">
+                                <h4 class="h6 text-muted mb-2">AI Models Predict</h4>
+                                <ul>
+                                    <li>Global Horizontal Irradiance (GHI)</li>
+                                    <li>Direct Normal Irradiance (DNI)</li>
+                                    <li>Diffuse Horizontal Irradiance (DHI)</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                    <p class="mt-4 mb-0">
+                        The system analyzes cloud dynamics, atmospheric conditions, and historical patterns 
+                        to generate high-resolution forecasts updated every 15 minutes.
+                    </p>
+                </div>
+            </div>
+        </section>
+
+        <section class="mb-5">
+            <h2 class="h3 mb-4 fw-bold">Key Applications</h2>
+            <div class="row g-4">
+                <div class="col-md-6 col-lg-3">
+                    <div class="h-100 p-4 bg-primary text-white rounded">
+                        <h3 class="h5">Solar Farms</h3>
+                        <p>Optimize panel orientation and maintenance schedules</p>
+                    </div>
+                </div>
+                <div class="col-md-6 col-lg-3">
+                    <div class="h-100 p-4 bg-info text-dark rounded">
+                        <h3 class="h5">Grid Operators</h3>
+                        <p>Manage energy distribution and storage systems</p>
+                    </div>
+                </div>
+                <div class="col-md-6 col-lg-3">
+                    <div class="h-100 p-4 bg-warning text-dark rounded">
+                        <h3 class="h5">Researchers</h3>
+                        <p>Validate models and analyze radiation patterns</p>
+                    </div>
+                </div>
+                <div class="col-md-6 col-lg-3">
+                    <div class="h-100 p-4 bg-success text-white rounded">
+                        <h3 class="h5">Policy Makers</h3>
+                        <p>Inform renewable energy infrastructure planning</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </div>
+</div>
+<!-- Footer -->
+<footer class="bg-dark text-white py-5 mt-auto footer-container border-top border-secondary">
+  <div class="container-fluid">
+    <div class="row g-4 text-center text-md-start">
+      <!-- Developed By -->
+      <div class="col-md-4 mb-4 mb-md-0">
+        <h5 class="fw-bold mb-3 text-primary">Developed by</h5>
+        <div class="d-flex align-items-center justify-content-center justify-content-md-start">
+          <img src="/static/logos/marconi_mak.png" 
+               alt="MARCONI LAB@MAK" 
+               class="footer-logo me-3"
+               style="height: 60px; width: auto;">
+        </div><br>
+          <div class="text-white small">
+            MARCONI Research Lab<br>
+            Makerere University
+           </div>
+      </div>
+
+      <!-- Partners -->
+      <div class="col-md-4 mb-4 mb-md-0">
+        <h5 class="fw-bold mb-3 text-primary">Partners</h5>
+        <div class="d-flex flex-wrap align-items-center justify-content-center justify-content-md-start gap-3">
+          <img src="/static/logos/giz.png" 
+               alt="GIZ" 
+               class="partner-logo"
+               style="height: 80px; width: auto;">
+          <object data="/static/logos/cross.svg" 
+                  type="image/svg+xml" 
+                  class="partner-logo"
+                  style="height: 40px; width: auto;">
+            <img src="/static/logos/cross_boundary.png" 
+                 alt="CrossBoundary Energy Fallback">
+          </object>
+        </div>
+      </div>
+
+      <!-- Contact Us -->
+      <div class="col-md-4">
+        <h5 class="fw-bold mb-3 text-primary">Contact Us</h5>
+        <div class="text-muted">
+          <address class="mb-3 text-white">
+            Makerere University<br>
+            College of Engineering, Design, Art & Technology<br>
+            Old Building, Room 171
+          </address>
+          <ul class="list-unstyled">
+            <li class="mb-2">
+              <a href="mailto:andrew.katumba@mak.ac.ug" 
+                 class="text-white text-decoration-none hover-text-primary">
+                <i class="bi bi-envelope me-2"></i>andrew.katumba@mak.ac.ug
+              </a>
+            </li>
+        </div>
+      </div>
+    </div>
+  </div>
+</footer>
+<!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="/static/script.js"></script>
+
+
+      </body>
+</html>

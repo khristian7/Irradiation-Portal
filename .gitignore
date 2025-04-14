@@ -1,0 +1,7 @@
+test.py
+
+# Python environment
+.venv/
+
+# Cache files
+__pycache__/
