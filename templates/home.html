@@ -79,6 +79,10 @@ body {
   padding: 4rem 0;
   text-align: center;
 }
+.ministry{
+    border-radius:5px;
+    height:80px;
+}
 
 footer {
   background: #1a1d23;
@@ -102,8 +106,8 @@ footer {
     <nav class="navbar navbar-expand-lg navbar-dark bg-primary shadow-sm fixed-top">
         <div class="container">
             <a class="navbar-brand d-flex align-items-center" href="{{ url_for('home') }}">
-                <i class="bi bi-sun fs-4 me-2"></i>
-                <span class="font-weight-bold">Irradiation Portal</span>
+                <i class=" me-2"></i>
+                <img src="/static/logos/ministry.png" alt='ministry' class="ministry">
             </a>
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
                 <span class="navbar-toggler-icon"></span>
@@ -173,7 +177,7 @@ footer {
         <div class="container">
             <div class="row align-items-center g-5">
                 <div class="col-lg-6">
-                    <img src="/static/solar_panel.jpg" alt="Solar Analytics" class="img-fluid about-img">
+                    <img src="/static/images/analytics.jpeg" alt="Solar Analytics" class="img-fluid about-img">
                 </div>
                 <div class="col-lg-6">
                     <h2 class="section-title mb-4">Precision Solar Intelligence</h2>
