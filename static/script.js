@@ -1,6 +1,8 @@
 // ----------------------------------MAP section -----------------------------
 let map = null;
 
+let maker = null;
+
 document.addEventListener("DOMContentLoaded", function () {
   // Initialize map
   map = L.map("map").setView([0.31166, 32.5974], 8);
@@ -25,6 +27,33 @@ document.addEventListener("DOMContentLoaded", function () {
     document.getElementById("longitudeInput").value = e.latlng.lng.toFixed(4);
     document.getElementById("selectedCoords").textContent =
       e.latlng.lat.toFixed(4) + ", " + e.latlng.lng.toFixed(4);
+  });
+
+// Add click handler - Now also adds/updates a marker
+  let clickedMarker = null;
+
+  map.on("click", function (e) {
+    const clickedLat = e.latlng.lat.toFixed(4);
+    const clickedLng = e.latlng.lng.toFixed(4);
+
+    // Update input fields and display text
+    document.getElementById("latitudeInput").value = clickedLat;
+    document.getElementById("longitudeInput").value = clickedLng;
+    document.getElementById("selectedCoords").textContent =
+      `${clickedLat}, ${clickedLng}`;
+
+    // --- Add/Update Marker Logic ---
+    // Remove the previous marker if it exists
+    if (clickedMarker) {
+      map.removeLayer(clickedMarker);
+      // Or you can use: clickedMarker.remove();
+    }
+
+    // Create a new marker at the clicked location, add it to the map,
+    // and store its reference in clickedMarker
+    clickedMarker = L.marker(e.latlng).addTo(map);
+    // --- End Marker Logic ---
+
   });
 
   // Add search functionality
