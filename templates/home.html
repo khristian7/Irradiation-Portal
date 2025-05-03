@@ -1,259 +1,473 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en" data-bs-theme="light">
-<head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Irradiation Portal</title>
-    <link rel="icon" href="/static/favicon/favicon.svg" type="image/svg+xml">
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="/static/styles.css">
-</head>
-<style>
-:root {
-  --primary-gradient: linear-gradient(135deg, #0d6efd 0%, #0b5ed7 100%);
-  --secondary-gradient:linear-gradient(135deg, rgba(13, 110, 253, 0.7) 0%, rgba(11, 94, 215, 0.7) 100%);
-}
+    <link rel="icon" href="/static/favicon/favicon.svg" type="image/svg+xml" />
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+    />
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css"
+      rel="stylesheet"
+    />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="/static/styles.css" />
+    <style>
+      :root {
+        --primary-gradient: linear-gradient(135deg, #0d6efd 0%, #0b5ed7 100%);
+        --secondary-gradient: linear-gradient(
+          135deg,
+          rgba(13, 110, 253, 0.7) 0%,
+          rgba(11, 94, 215, 0.7) 100%
+        );
+        --navbar-scroll-bg: rgba(26, 29, 35, 0.9);
+      }
 
-body {
-  font-family: 'Inter', sans-serif;
-  line-height: 1.6;
-}
+      body {
+        font-family: "Inter", sans-serif;
+        line-height: 1.6;
+      }
 
-.hero {
-  background: var(--secondary-gradient), url('/static/images/background.jpg') center center/cover no-repeat;
-  color: #fff;
-  padding: 120px 0 100px;
-  position: relative;
-  overflow: hidden;
-}
+      .navbar {
+        background-color: transparent;
+        transition: background-color 0.3s ease-in-out;
+      }
 
-.hero h1 {
-  font-size: 3.75rem;
-  font-weight: 700;
-  letter-spacing: -0.025em;
-  margin-bottom: 1.5rem;
-}
+      .navbar.navbar-scrolled {
+        background-color: var(--navbar-scroll-bg);
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        backdrop-filter: blur(5px);
+      }
 
-.hero .lead {
-  font-size: 1.35rem;
-  max-width: 700px;
-  margin: 0 auto 2rem;
-}
+      .hero {
+        background:
+          var(--secondary-gradient),
+          url("/static/images/background.jpg") center center/cover no-repeat;
+        color: #fff;
+        padding: 140px 0 120px;
+        position: relative;
+        overflow: hidden;
+        text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.3);
+      }
 
-.feature-card {
-  background: #fff;
-  border: 1px solid rgba(13, 110, 253, 0.15);
-  border-radius: 12px;
-  padding: 2rem;
-  transition: all 0.3s ease;
-  margin-bottom: 1.5rem;
-}
+      .hero h1 {
+        font-size: 3.5rem;
+        font-weight: 700;
+        letter-spacing: -0.025em;
+        margin-bottom: 1.5rem;
+      }
 
-.feature-card:hover {
-  transform: translateY(-5px);
-  box-shadow: 0 10px 20px rgba(13, 110, 253, 0.1);
-}
+      .hero .lead {
+        font-size: 1.3rem;
+        max-width: 750px;
+        margin: 0 auto 2.5rem;
+      }
 
-.features-icon {
-  font-size: 2.5rem;
-  color: #0d6efd;
-  margin-bottom: 1rem;
-}
+      .feature-card {
+        background: #fff;
+        border: 1px solid rgba(13, 110, 253, 0.1);
+        border-radius: 12px;
+        padding: 2.5rem 2rem;
+        transition: all 0.3s ease;
+        margin-bottom: 1.5rem;
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+      }
 
-.section-title {
-  font-weight: 700;
-  letter-spacing: -0.015em;
-  margin-bottom: 3rem;
-}
+      .feature-card:hover {
+        transform: translateY(-6px);
+        box-shadow: 0 12px 24px rgba(13, 110, 253, 0.12);
+      }
 
-.about-img {
-  border-radius: 12px;
-  box-shadow: 0 15px 30px rgba(0, 0, 0, 0.1);
-}
+      .features-icon {
+        font-size: 3rem;
+        color: #0d6efd;
+        margin-bottom: 1.25rem;
+      }
 
-.cta-section {
-  background: var(--primary-gradient);
-  color: #fff;
-  padding: 4rem 0;
-  text-align: center;
-}
-.ministry{
-    border-radius:5px;
-    height:80px;
-}
+      .feature-card h4 {
+        font-size: 1.5rem;
+        font-weight: 600;
+      }
 
-footer {
-  background: #1a1d23;
-  color: rgba(255, 255, 255, 0.85);
-  padding: 3rem 0 2rem;
-}
+      .section-title {
+        font-weight: 700;
+        letter-spacing: -0.015em;
+        margin-bottom: 3.5rem;
+      }
 
-@media (max-width: 768px) {
-  .hero h1 {
-    font-size: 2.5rem;
-  }
+      .about-img {
+        border-radius: 12px;
+        box-shadow: 0 15px 35px rgba(0, 0, 0, 0.12);
+      }
 
-  .hero .lead {
-    font-size: 1.1rem;
-  }
-}
+      .cta-section {
+        background: var(--primary-gradient);
+        color: #fff;
+        padding: 5rem 0;
+        text-align: center;
+      }
 
-</style>
-<body>
-    <!-- Navigation -->
-    <nav class="navbar navbar-expand-lg navbar-dark shadow-sm fixed-top">
-        <div class="container">
-            <a class="navbar-brand d-flex align-items-center" href="{{ url_for('home') }}">
-                <i class=" me-2"></i>
-                <img src="/static/images/memdlogo.svg" alt='ministry' class="ministry">
-            </a>
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
-                <span class="navbar-toggler-icon"></span>
-            </button>
-            <div class="collapse navbar-collapse" id="navbarNav">
-                <ul class="navbar-nav ms-auto">
-                    <li class="nav-item mx-2">
-                        <a class="nav-link active" href="{{ url_for('index') }}">Data Services</a>
-                    </li>
-                    <li class="nav-item mx-2">
-                        <a class="nav-link" href="{{ url_for('documentation') }}">Documentation</a>
-                    </li>
-                    <li class="nav-item mx-2">
-                        <a class="nav-link" href="{{ url_for('help') }}">Help</a>
-                    </li>
-                </ul>
-            </div>
+      .ministry-logo {
+        border-radius: 5px;
+        height: 60px;
+        width: auto;
+      }
+
+      footer {
+        background: #1a1d23;
+        color: rgba(255, 255, 255, 0.8);
+        padding: 3.5rem 0 2.5rem;
+      }
+
+      footer a:hover {
+        color: #fff !important;
+        text-decoration: underline !important;
+      }
+
+      .border-white-10 {
+        border-color: rgba(255, 255, 255, 0.1) !important;
+      }
+
+      /* Responsive Adjustments */
+      @media (max-width: 992px) {
+        .hero h1 {
+          font-size: 3rem;
+        }
+        .hero .lead {
+          font-size: 1.2rem;
+        }
+        .feature-card {
+          padding: 2rem 1.5rem;
+        }
+      }
+
+      @media (max-width: 768px) {
+        .hero {
+          padding: 100px 0 80px;
+        }
+        .hero h1 {
+          font-size: 2.5rem;
+        }
+        .hero .lead {
+          font-size: 1.1rem;
+        }
+        .cta-section {
+          padding: 4rem 0;
+        }
+        footer {
+          text-align: center;
+        }
+        footer .col-lg-4,
+        footer .col-lg-2 {
+          margin-bottom: 1.5rem;
+        }
+        .input-group {
+          justify-content: center;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <nav
+      id="mainNavbar"
+      class="navbar navbar-expand-lg navbar-dark shadow-sm fixed-top"
+    >
+      <div class="container">
+        <a
+          class="navbar-brand d-flex align-items-center"
+          href="{{ url_for('home') }}"
+        >
+          <img
+            src="/static/images/memdlogo.svg"
+            alt="Ministry Logo"
+            class="ministry-logo me-2"
+          />
+        </a>
+        <button
+          class="navbar-toggler"
+          type="button"
+          data-bs-toggle="collapse"
+          data-bs-target="#navbarNav"
+          aria-controls="navbarNav"
+          aria-expanded="false"
+          aria-label="Toggle navigation"
+        >
+          <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarNav">
+          <ul class="navbar-nav ms-auto">
+            <li class="nav-item mx-2">
+              <a class="nav-link" href="{{ url_for('index') }}"
+                >Data Services</a
+              >
+            </li>
+            <li class="nav-item mx-2">
+              <a class="nav-link" href="{{ url_for('documentation') }}"
+                >Documentation</a
+              >
+            </li>
+            <li class="nav-item mx-2">
+              <a class="nav-link" href="{{ url_for('help') }}">Help</a>
+            </li>
+          </ul>
         </div>
+      </div>
     </nav>
 
-    <!-- Hero Section -->
     <section class="hero">
-        <div class="container position-relative">
-            <div class="text-center">
-                <h1 class="display-4 fw-bold mb-4">Solar Irradiance Data Portal</h1>
-                <p class="lead mb-5">Empowering renewable energy decisions through precision modeling and intelligent data visualization</p>
-                <a href="{{ url_for('index') }}" class="btn btn-light btn-lg px-5 py-3 rounded-pill fw-semibold">
-                    Data Services <i class="bi bi-arrow-right-circle ms-2"></i>
-                </a>
-            </div>
+      <div class="container position-relative">
+        <div class="text-center">
+          <h1 class="display-4 fw-bold mb-4">Solar Irradiance Data Portal</h1>
+          <p class="lead mb-5">
+            Empowering renewable energy decisions through precision modeling and
+            intelligent data visualization
+          </p>
+          <a
+            href="{{ url_for('index') }}"
+            class="btn btn-light btn-lg px-5 py-3 rounded-pill fw-semibold shadow"
+          >
+            Explore Data Services <i class="bi bi-arrow-right-circle ms-2"></i>
+          </a>
         </div>
+      </div>
     </section>
 
-    <!-- Features Section -->
-    <section class="py-5">
-        <div class="container">
-            <h2 class="text-center section-title mb-5">Platform Features</h2>
-            <div class="row g-4">
-                <div class="col-lg-4">
-                    <div class="feature-card text-center">
-                        <i class="bi bi-cloud-sun-fill features-icon"></i>
-                        <h4 class="h3 mb-3">Advanced Modeling</h4>
-                        <p class="text-muted">Combining empirical models with AI models to provide unbiased irradiance data
-                        </p>
-                    </div>
-                </div>
-                <div class="col-lg-4">
-                    <div class="feature-card text-center">
-                        <i class="bi bi-bar-chart-line features-icon"></i>
-                        <h4 class="h3 mb-3">Interactive Analytics</h4>
-                        <p class="text-muted">Dynamic visualization tools and customizable dashboards for deep data exploration</p>
-                    </div>
-                </div>
-                <div class="col-lg-4">
-                    <div class="feature-card text-center">
-                        <i class="bi bi-database features-icon"></i>
-                        <h4 class="h3 mb-3">Data Management</h4>
-                        <p class="text-muted">Seamless export capabilities with API access and multiple format support (CSV, JSON)</p>
-                    </div>
-                </div>
+    <section class="py-5 my-4">
+      <div class="container">
+        <h2 class="text-center section-title mb-5">Platform Capabilities</h2>
+        <div class="row g-4 justify-content-center">
+          <div class="col-lg-4 d-flex align-items-stretch">
+            <div class="feature-card text-center">
+              <i class="bi bi-cloud-sun-fill features-icon"></i>
+              <h4 class="mb-3">Get Highly Accurate Data</h4>
+              <p class="text-muted">
+                Leverage advanced empirical and AI models for unbiased
+                irradiance insights.
+              </p>
             </div>
+          </div>
+          <div class="col-lg-4 d-flex align-items-stretch">
+            <div class="feature-card text-center">
+              <i class="bi bi-bar-chart-line features-icon"></i>
+              <h4 class="mb-3">Explore Data Visually</h4>
+              <p class="text-muted">
+                Utilize dynamic charts, interactive maps, and customizable
+                dashboards for deep data exploration.
+              </p>
+            </div>
+          </div>
+          <div class="col-lg-4 d-flex align-items-stretch">
+            <div class="feature-card text-center">
+              <i class="bi bi-download features-icon"></i>
+              <h4 class="mb-3">Access Data Seamlessly</h4>
+              <p class="text-muted">
+                Easily export your findings via direct download (CSV, JSON) or
+                integrate using our robust API.
+              </p>
+            </div>
+          </div>
         </div>
+      </div>
     </section>
 
-    <!-- About Section -->
-    <section class="bg-light py-5">
-        <div class="container">
-            <div class="row align-items-center g-5">
-                <div class="col-lg-6">
-                    <img src="/static/images/analytics.jpeg" alt="Solar Analytics" class="img-fluid about-img">
-                </div>
-                <div class="col-lg-6">
-                    <h2 class="section-title mb-4">Precision Solar Intelligence</h2>
-                    <p class="lead text-muted mb-4">Our platform integrates cutting-edge meteorological data with machine learning algorithms to deliver the most accurate solar irradiance predictions available.</p>
-                    <div class="d-grid gap-3">
-                        <div class="d-flex align-items-center">
-                            <i class="bi bi-check2-circle text-primary me-3 fs-5"></i>
-                            <span>Real-time solar Irradiance predictions</span>
-                        </div>
-                        <div class="d-flex align-items-center">
-                            <i class="bi bi-check2-circle text-primary me-3 fs-5"></i>
-                            <span>Historical data analysis & future projections</span>
-                        </div>
-                        <div class="d-flex align-items-center">
-                            <i class="bi bi-check2-circle text-primary me-3 fs-5"></i>
-                            <span>Multi-location comparative analysis</span>
-                        </div>
-                    </div>
-                </div>
+    <section class="bg-light py-5 my-4">
+      <div class="container">
+        <div class="row align-items-center g-5">
+          <div class="col-lg-6">
+            <img
+              src="/static/images/analytics.jpeg"
+              alt="Dashboard showing solar irradiance analytics graphs and map"
+              class="img-fluid about-img"
+            />
+          </div>
+          <div class="col-lg-6">
+            <h2 class="section-title mb-4">
+              Driven by Data, Powered by Intelligence
+            </h2>
+            <p class="lead text-muted mb-4">
+              Our platform integrates cutting-edge meteorological data from
+              sources like CAMS and NASA POWER with sophisticated machine
+              learning algorithms to deliver highly accurate solar irradiance
+              predictions and analysis.
+            </p>
+            <div class="d-grid gap-3">
+              <div class="d-flex align-items-center">
+                <i class="bi bi-check2-circle text-primary me-3 fs-5"></i>
+                <span
+                  >Access real-time and historical solar irradiance data.</span
+                >
+              </div>
+              <div class="d-flex align-items-center">
+                <i class="bi bi-check2-circle text-primary me-3 fs-5"></i>
+                <span
+                  >Analyze trends and generate reliable future
+                  projections.</span
+                >
+              </div>
+              <div class="d-flex align-items-center">
+                <i class="bi bi-check2-circle text-primary me-3 fs-5"></i>
+                <span
+                  >Compare solar potential across multiple global
+                  locations.</span
+                >
+              </div>
+              <div class="d-flex align-items-center">
+                <i class="bi bi-check2-circle text-primary me-3 fs-5"></i>
+                <span
+                  >Integrate results easily with flexible export options.</span
+                >
+              </div>
             </div>
+          </div>
         </div>
+      </div>
     </section>
 
-    <!-- CTA Section -->
     <section class="cta-section">
-        <div class="container">
-            <div class="text-center">
-                <h2 class="text-white mb-4">Ready to Optimize Your Solar Strategy?</h2>
-                <p class="text-white-50 mb-5">Join hundreds of energy professionals already making data-driven decisions</p>
-                <a href="{{ url_for('index') }}" class="btn btn-outline-light btn-lg px-5 py-3 rounded-pill fw-semibold">
-                    Get Started Now
-                </a>
-            </div>
+      <div class="container">
+        <div class="text-center">
+          <h2 class="text-white mb-4">
+            Ready to Optimize Your Solar Strategy?
+          </h2>
+          <p class="text-white-50 mb-5 fs-5">
+            Join energy professionals making smarter, data-driven decisions.
+          </p>
+          <a
+            href="{{ url_for('index') }}"
+            class="btn btn-outline-light btn-lg px-5 py-3 rounded-pill fw-semibold shadow-sm"
+          >
+            Access the Portal
+          </a>
         </div>
+      </div>
     </section>
 
-    <!-- Footer -->
     <footer>
-        <div class="container">
-            <div class="row g-4">
-                <div class="col-lg-4">
-                    <h5 class="text-white mb-4">Irradiation Portal</h5>
-                    <p class="text-white-50">Advanced analytics platform for solar energy professionals</p>
-                </div>
-                <div class="col-lg-2">
-                    <h6 class="text-white mb-3">Resources</h6>
-                    <ul class="list-unstyled">
-                        <li><a href="#" class="text-white-50 text-decoration-none">Documentation</a></li>
-                        <li><a href="#" class="text-white-50 text-decoration-none">API Reference</a></li>
-                        <li><a href="#" class="text-white-50 text-decoration-none">Case Studies</a></li>
-                    </ul>
-                </div>
-                <div class="col-lg-2">
-                    <h6 class="text-white mb-3">Support</h6>
-                    <ul class="list-unstyled">
-                        <li><a href="#" class="text-white-50 text-decoration-none">Contact Us</a></li>
-                        <li><a href="#" class="text-white-50 text-decoration-none">Knowledge Base</a></li>
-                        <li><a href="#" class="text-white-50 text-decoration-none">Service Status</a></li>
-                    </ul>
-                </div>
-                <div class="col-lg-4">
-                    <h6 class="text-white mb-3">Stay Updated</h6>
-                    <div class="input-group">
-                        <input type="email" class="form-control" placeholder="Enter your email">
-                        <button class="btn btn-primary" type="button">Subscribe</button>
-                    </div>
-                </div>
-            </div>
-            <hr class="my-4 border-white-10">
-            <div class="text-center text-white-50 pt-2">
-                <p class="mb-0">&copy; {{ datetime.utcnow().year }} Irradiation Portal. All rights reserved.</p>
-                <p class="mb-0">Developed by Marconi Lab</p>
-            </div>
+      <div class="container">
+        <div class="row g-4">
+          <div class="col-lg-4 col-md-6">
+            <h5 class="text-white mb-4">Irradiation Portal</h5>
+            <p class="text-white-50">
+              Advanced analytics platform for solar energy professionals,
+              powered by cutting-edge data and AI.
+            </p>
+          </div>
+          <div class="col-lg-2 col-md-3 col-6">
+            <h6 class="text-white mb-3">Resources</h6>
+            <ul class="list-unstyled">
+              <li>
+                <a
+                  href="{{ url_for('documentation') }}"
+                  class="text-white-50 text-decoration-none"
+                  >Documentation</a
+                >
+              </li>
+              <li>
+                <a href="#" class="text-white-50 text-decoration-none"
+                  >API Reference</a
+                >
+              </li>
+              <li>
+                <a href="#" class="text-white-50 text-decoration-none"
+                  >Case Studies</a
+                >
+              </li>
+            </ul>
+          </div>
+          <div class="col-lg-2 col-md-3 col-6">
+            <h6 class="text-white mb-3">Support</h6>
+            <ul class="list-unstyled">
+              <li>
+                <a
+                  href="{{ url_for('help') }}"
+                  class="text-white-50 text-decoration-none"
+                  >Help / Contact</a
+                >
+              </li>
+              <li>
+                <a href="#" class="text-white-50 text-decoration-none"
+                  >Knowledge Base</a
+                >
+              </li>
+              <li>
+                <a href="#" class="text-white-50 text-decoration-none"
+                  >Service Status</a
+                >
+              </li>
+            </ul>
+          </div>
+          <div class="col-lg-4 col-md-12">
+            <h6 class="text-white mb-3">Stay Updated</h6>
+            <form action="#" method="post">
+              <div class="input-group mb-3">
+                <input
+                  type="email"
+                  class="form-control"
+                  placeholder="Enter your email"
+                  aria-label="Enter your email"
+                  required
+                />
+                <button class="btn btn-primary" type="submit">Subscribe</button>
+              </div>
+            </form>
+            <small class="text-white-50"
+              >Get notified about platform updates and new features.</small
+            >
+          </div>
         </div>
+        <hr class="my-4 border-white-10" />
+        <div class="text-center text-white-50 pt-2">
+          <p class="mb-0">
+            &copy; {{ datetime.utcnow().year }} Irradiation Portal. All rights
+            reserved.
+          </p>
+          <p class="mb-0 small">Developed by Marconi Lab</p>
+        </div>
+      </div>
     </footer>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-</body>
+
+    <script>
+      // Select the navbar element
+      const mainNavbar = document.getElementById("mainNavbar");
+      // Define the scroll threshold (how many pixels down before the navbar changes)
+      const scrollThreshold = 10; // Adjust this value as needed
+
+      // Function to handle scroll event
+      const handleScroll = () => {
+        // Get the current vertical scroll position
+        const scrollPosition =
+          window.scrollY || document.documentElement.scrollTop;
+
+        // Check if the scroll position is past the threshold
+        if (scrollPosition > scrollThreshold) {
+          // Add the 'navbar-scrolled' class if not already present
+          if (!mainNavbar.classList.contains("navbar-scrolled")) {
+            mainNavbar.classList.add("navbar-scrolled");
+          }
+        } else {
+          // Remove the 'navbar-scrolled' class if present
+          if (mainNavbar.classList.contains("navbar-scrolled")) {
+            mainNavbar.classList.remove("navbar-scrolled");
+          }
+        }
+      };
+
+      // Add event listener for scroll events
+      window.addEventListener("scroll", handleScroll);
+
+      // Optional: Run the function once on load in case the page loads already scrolled
+      document.addEventListener("DOMContentLoaded", handleScroll);
+    </script>
+  </body>
 </html>

@@ -1,12 +1,11 @@
 from flask import Flask, render_template, request, jsonify, send_file
-from datetime import datetime, timedelta
+from datetime import datetime
 import csv
 import io
 import json
 from model import SolarIrradianceCalculator
 import traceback
-import pandas as pd
-from fetch_CAMS_data import get_cams_data 
+from CAMS import get_cams_data 
 import os
 
 app = Flask(__name__)
@@ -38,16 +37,18 @@ def fetch_data():
     longitude = float(data.get('longitude', 0.0))
     start_date_str = data.get('startDate')
     end_date_str = data.get('endDate')
-    time_granularity = data.get('timeGranularity', 'Daily')  # 'Hourly', 'Daily', 'Monthly'
+    time_granularity = data.get('timeGranularity', 'Daily') 
     
     if not start_date_str or not end_date_str:
         return jsonify({"error": "Invalid or missing start/end date"}), 400
 
     try:
-        start_date = datetime.strptime(start_date_str, "%Y-%m-%d")
-        end_date = datetime.strptime(end_date_str, "%Y-%m-%d")
+        start_date = datetime.strptime(start_date_str, "%d/%m/%Y")
+        end_date = datetime.strptime(end_date_str, "%d/%m/%Y")
     except ValueError:
-        return jsonify({"error": "Dates must be in YYYY-MM-DD format"}), 400
+        print(start_date_str)
+        print(end_date_str)
+        return jsonify({"error": "Dates must be in DD/MM/YYYY format"}), 400
 
     # Ensure end_date >= start_date
     if end_date < start_date:
