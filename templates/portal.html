@@ -60,47 +60,86 @@
             <h5 class="card-title mb-3 text-primary">
               <i class="bi bi-sliders me-2"></i>Data Configuration
             </h5>
+
+            <!-- Improved Date Section -->
             <div class="mb-4">
+              <div class="btn-group" role="group" aria-label="Time">
+                <input type="radio" class="btn-check" name="timeRangeType" value="date" id="date" autocomplete="off" checked>
+                <label class="btn btn-outline-secondary" for="date">Date Range</label>
+
+                <input type="radio" class="btn-check" name="timeRangeType" value="year" id="year" autocomplete="off">
+                <label class="btn btn-outline-secondary" for="year">Year Range</label>
+              </div>
+              <div id="dateRangeFields">
+                <div class="input-group mb-2">
+                  <input type="text" class="form-control datepicker" data-date-format="dd/mm/yyyy" id="startDate" placeholder="Start Date" />
+                  <span class="input-group-text">
+                    <i class="bi bi-calendar"></i>
+                  </span>
+                </div>
+
+                <div class="input-group">
+                  <input type="text" class="form-control datepicker" data-date-format="dd/mm/yyyy" id="endDate" placeholder="End Date" />
+                  <span class="input-group-text">
+                    <i class="bi bi-calendar"></i>
+                  </span>
+                </div>
+              </div>                
+              <!-- new year inputs, shown when “Year Range” is selected -->
+              <div id="yearRangeFields" style="display: none;">
+                <div class="form-floating mb-2">
+                  <input
+                      class="form-control"
+                      type="number"
+                      id="startYear"
+                      name="startYear"
+                      min="2000"
+                      max="2050"
+                      value="2020"
+                      placeholder=" "  >
+                      <label for="startYear">Start Year</label> </div>
+
+                <div class="form-floating">
+                  <input
+                      class="form-control"
+                      type="number"
+                      id="endYear"
+                      name="endYear"
+                      min="2000"
+                      max="2050"
+                      step="1"
+                      placeholder=" " >
+                      <label for="endYear">End Year</label> 
+                </div>                
+              </div>               
+            </div>
+
+            <div class="mb-4" >
+              <div id="resolutionbtns">
               <label class="form-label fw-bold">Temporal Resolution</label>
               <div class="btn-group" role="group" aria-label="Temporal Resolution">
                 <input type="radio" class="btn-check" name="Temporal Resolution" id="Hourly" value="Hourly"
                   autocomplete="off" checked />
-                <label class="btn btn-outline-secondary" for="Hourly">Hourly</label>
+                <label class="btn btn-outline-primary" for="Hourly">Hourly</label>
                 <input type="radio" class="btn-check" name="Temporal Resolution" id="Daily" value="Daily"
                   autocomplete="off" />
-                <label class="btn btn-outline-secondary" for="Daily">Daily</label>
+                <label class="btn btn-outline-primary" for="Daily">Daily</label>
                 <input type="radio" class="btn-check" name="Temporal Resolution" id="Monthly" value="Monthly"
                   autocomplete="off" />
-                <label class="btn btn-outline-secondary" for="Monthly">Monthly</label>
+                <label class="btn btn-outline-primary" for="Monthly">Monthly</label>
               </div>
+              </div>
+            
 
               <label class="form-label fw-bold">Output Format</label><br />
               <div class="btn-group" role="group" aria-label="Output Format">
                 <input type="radio" class="btn-check" name="outputFormat" id="csv" value="CSV" autocomplete="off"
                   checked />
-                <label class="btn btn-outline-secondary" for="csv">CSV</label>
+                <label class="btn btn-outline-primary" for="csv">CSV</label>
                 <input type="radio" class="btn-check" name="outputFormat" id="json" value="JSON" autocomplete="off" />
-                <label class="btn btn-outline-secondary" for="json">JSON</label>
+                <label class="btn btn-outline-primary" for="json">JSON</label>
               </div>
-
-              <!-- Improved Date Picker Section -->
-              <div class="mb-4">
-                <label class="form-label fw-bold">Date Range</label>
-                <div class="input-group mb-2">
-                  <input type="text" class="form-control datepicker" data-date-format="dd/mm/yyyy" id="startDate"
-                    placeholder="Start Date" />
-                  <span class="input-group-text">
-                    <i class="bi bi-calendar"></i>
-                  </span>
-                </div>
-                <div class="input-group">
-                  <input type="text" class="form-control datepicker" data-date-format="dd/mm/yyyy" id="endDate"
-                    placeholder="End Date" />
-                  <span class="input-group-text">
-                    <i class="bi bi-calendar"></i>
-                  </span>
-                </div>
-              </div>
+              <br/><br/>
 
               <!-- Multiple Selection (Checkboxes) -->
               <div class="mb-4">
@@ -118,6 +157,7 @@
                   <input type="checkbox" class="btn-check" id="gti" value="GTI" autocomplete="off" />
                   <label class="btn btn-outline-primary" for="gti">GTI</label>
                 </div>
+              
 
                 <!-- Tilt Input -->
                 <div class="mb-3 tilt-angle-field" style="display: none;">
@@ -317,15 +357,6 @@
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css" />
   <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
 
-
-  <script>
-    document.addEventListener("DOMContentLoaded", function () {
-      flatpickr(".datepicker", {
-        dateFormat: "d/m/Y",
-      });
-    });
-
-  </script>
 
   <script>
     document.addEventListener('DOMContentLoaded', function () {

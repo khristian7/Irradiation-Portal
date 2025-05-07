@@ -1,0 +1,88 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Chart.js Demo</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+      body {
+        max-width: 600px;
+        margin: 40px auto;
+        font-family: sans-serif;
+      }
+      canvas {
+        background: #fff;
+        border: 1px solid #ddd;
+      }
+    </style>
+  </head>
+  <body>
+    <h3>Mean GHI with Std Dev (Demo Data)</h3>
+    <canvas id="ghiChart"></canvas>
+
+    <script>
+      // --- 1. Dummy data so you actually see something! ---
+      const labels = ["2025-01-01", "2025-01-02", "2025-01-03", "2025-01-04"];
+      const meanData = [350, 400, 375, 420];
+      const stdData = [80, 100, 90, 70];
+
+      // --- 2. Compute upper & lower ---
+      const upper = meanData.map((m, i) => m + stdData[i]);
+      const lower = meanData.map((m, i) => m - stdData[i]);
+
+      // --- 3. Build datasets ---
+      const data = {
+        labels,
+        datasets: [
+          {
+            // invisible lower bound
+            data: lower,
+            fill: false,
+            pointRadius: 0,
+            borderWidth: 0,
+          },
+          {
+            // shaded area between lower & upper
+            data: upper,
+            fill: "-1",
+            backgroundColor: "rgba(54,162,235,0.2)",
+            pointRadius: 0,
+            borderWidth: 0,
+          },
+          {
+            // mean line
+            label: "Mean GHI",
+            data: meanData,
+            borderColor: "rgba(54,162,235,1)",
+            borderWidth: 2,
+            pointRadius: 3,
+            fill: false,
+          },
+        ],
+      };
+
+      // --- 4. Config & render ---
+      new Chart(document.getElementById("ghiChart"), {
+        type: "line",
+        data,
+        options: {
+          responsive: true,
+          scales: {
+            x: {
+              type: "category",
+              title: { display: true, text: "Date" },
+            },
+            y: {
+              title: { display: true, text: "GHI (W/m²)" },
+              suggestedMin: 0,
+            },
+          },
+          plugins: {
+            legend: { position: "top" },
+          },
+          interaction: { mode: "index", intersect: false },
+        },
+      });
+    </script>
+  </body>
+</html>

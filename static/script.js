@@ -1,7 +1,7 @@
 // ----------------------------------MAP section -----------------------------
 let map = null;
-let clickedMarker = null; // Changed 'maker' to 'clickedMarker' for clarity
-let irradianceChart = null; // Keep track of the chart instance
+let clickedMarker = null; 
+let irradianceChart = null; // Ensure this global variable is used
 
 document.addEventListener("DOMContentLoaded", function () {
   // --- Initialize Map ---
@@ -17,8 +17,8 @@ document.addEventListener("DOMContentLoaded", function () {
   flatpickr(".datepicker", {
     dateFormat: "Y-m-d", // Use ISO format (YYYY-MM-DD) for consistency
     // If you still want d/m/Y display, use altInput and altFormat:
-    // altInput: true,
-    // altFormat: "d/m/Y",
+    altInput: true,
+    altFormat: "d/m/Y",
   });
 
   // --- Toggle Tilt Angle Field ---
@@ -69,7 +69,7 @@ function initializeChart() {
       labels: [],
       datasets: [
         {
-          label: "Irradiance (W/m²)", // Default label
+          label: "Irradiance (W/m²)", 
           data: [],
           borderColor: "#4e73df",
           backgroundColor: "rgba(78, 115, 223, 0.05)",
@@ -103,12 +103,12 @@ function initializeChart() {
         x: {
           type: "time",
           time: {
-            unit: "day", // Default unit
-            tooltipFormat: "PPpp", // More detailed tooltip format e.g., Aug 18, 2024, 12:00:00 PM
+            unit: "day", 
+            tooltipFormat: "PPpp", 
             displayFormats: {
-              hour: "HH:mm", // Format for hourly display
-              day: "MMM d", // Format for daily display
-              month: "MMM yyyy", // Format for monthly display
+              hour: "HH:mm", 
+              day: "MMM d",
+              month: "MMM yy",
             },
           },
           title: { display: true, text: "Time" },
@@ -151,10 +151,6 @@ function setupEventListeners() {
     .getElementById("downloadBtn")
     .addEventListener("click", handleDownload);
   document.getElementById("cancelBtn").addEventListener("click", resetForm);
-  document
-    .getElementById("downloadPdfBtn")
-    .addEventListener("click", downloadChartAsImage); // Changed to PNG
-
   // Input validation on change
   const formInputs = document.querySelectorAll(
     '.form-control, input[type="radio"], input[type="checkbox"], select', // Include select
@@ -222,7 +218,8 @@ function searchLocation() {
       alert(`Failed to search location: ${error.message}`);
     });
 }
-
+//-----------Function to visualize the data-------------------
+// This function handles the visualization of data based on user input
 async function handleVisualize() {
   const visualizeBtn = document.getElementById("visualizeBtn");
   if (!validateInputs().valid) {
@@ -231,7 +228,8 @@ async function handleVisualize() {
   }
 
   const params = getFormData();
-  const dataSource = params.dataSource; // Get selected data source
+  const dataSource = params.dataSource;
+  const mode = params.mode;
 
   // Determine the correct API endpoint
   let apiUrl = "";
@@ -240,14 +238,14 @@ async function handleVisualize() {
       apiUrl = "/api/model";
       break;
     case "CAMS_RAD":
-      apiUrl = "/api/cams"; // Assuming this is the correct endpoint for CAMS visualization
+      apiUrl = "/api/cams"; 
       break;
-    case "NASA": // Assuming 'NASA' is the value for NASA POWER
-      apiUrl = "/api/nasa"; // Assuming this is the correct endpoint for NASA visualization
+    case "NASA":
+      apiUrl = "/api/nasa";
       break;
     default:
-      alert("Invalid data source selected.");
-      return; // Stop if data source is not recognized
+      alert("Invalid model selected.");
+      return;
   }
 
   // Show loading state
@@ -263,9 +261,9 @@ async function handleVisualize() {
       visualizeBtn,
       "Visualize",
     );
-  }, 60000); // Increased timeout to 60 seconds
+  }, 60000);
 
-  try {
+try {
     const response = await fetch(apiUrl, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -273,7 +271,7 @@ async function handleVisualize() {
       signal: controller.signal,
     });
 
-    clearTimeout(timeoutId); // Clear timeout if fetch completes
+    clearTimeout(timeoutId);
 
     if (!response.ok) {
       // Try to get error message from backend response
@@ -288,6 +286,8 @@ async function handleVisualize() {
     }
 
     const result = await response.json();
+
+    if (mode === "date"){
 
     // Basic validation of the received data structure
     if (!result || !Array.isArray(result.data)) {
@@ -306,14 +306,38 @@ async function handleVisualize() {
         "Received data points are missing required fields (datetime/year+month or irradiance).",
       );
     }
+  
 
     updateChart(result.data, params.timeGranularity);
-    updateSummary(params); // Update summary with the parameters used
-  } catch (error) {
-    if (error.name !== "AbortError") {
-      // Don't show generic error for timeouts handled above
-      handleError(error, visualizeBtn, "Visualize");
+    updateSummary(params);
+  } 
+//-----------THIS IS THE POINT I AM EDITING-------------------
+  else if (mode === "year") {
+    // Handle the year mode
+    if (!result || !Array.isArray(result.data)) {
+      throw new Error("Invalid data format received from the server.");
     }
+
+    // `stats` is an array of { datetime, GHI, upper, lower }
+    const stats = result.data;
+
+    // pull out each series:
+    const dateLabels =   stats.map(pt => pt.datetime);
+    const meanSeries =   stats.map(pt => pt.mean);
+    const upperSeries =  stats.map(pt => pt.upper);
+    const lowerSeries =  stats.map(pt => pt.lower);
+
+    avgChart(meanSeries, upperSeries, lowerSeries, dateLabels); // Call the corrected avgChart
+ 
+  }
+    
+  }
+catch (error) {
+  if (error.name !== "AbortError") {
+    // Don't show generic error for timeouts handled above
+    handleError(error, visualizeBtn, "Visualize");
+  }
+    
   } finally {
     // Reset UI state (unless it was a timeout handled in setTimeout)
     if (controller.signal.aborted === false) {
@@ -426,27 +450,6 @@ function resetForm() {
   setupTiltAngleToggle();
 }
 
-function downloadChartAsImage() {
-  if (!irradianceChart || irradianceChart.data.labels.length === 0) {
-    alert("Please generate a chart first before downloading.");
-    return;
-  }
-
-  const canvas = document.getElementById("irradianceChart");
-  const imageData = canvas.toDataURL("image/png"); // Get image data as PNG
-
-  // Create a link element and trigger download
-  const link = document.createElement("a");
-  link.href = imageData;
-  // Suggest a filename
-  const timestamp = new Date().toISOString().split("T")[0].replace(/-/g, "");
-  link.download = `solar_irradiance_chart_${timestamp}.png`;
-
-  // Trigger download
-  document.body.appendChild(link);
-  link.click();
-  document.body.removeChild(link);
-}
 
 // --- Helper Functions ---
 
@@ -458,7 +461,7 @@ function validateInputs() {
   const dataSource = document.getElementById("dataSource").value;
 
   let errors = [];
-
+/*
   if (isNaN(lat) || lat < -90 || lat > 90) {
     errors.push("Latitude must be a number between -90 and 90.");
   }
@@ -478,6 +481,7 @@ function validateInputs() {
       errors.push("Start date cannot be after end date.");
     }
   }
+    */
   if (!dataSource) {
     errors.push("Please select a data source.");
   }
@@ -492,7 +496,7 @@ function validateInputs() {
 
   return { valid: true, message: "" };
 }
-
+//#TODO: Add validation for tilt angle if GTI is selected and also valiate the avg plot
 function validateAndToggleButton() {
   const { valid } = validateInputs();
   document.getElementById("visualizeBtn").disabled = !valid;
@@ -505,31 +509,20 @@ function getFormData() {
   const endDate = document.getElementById("endDate").value;
 
   const params = {
-    latitude: parseFloat(document.getElementById("latitudeInput").value) || 0, // Default to 0 if NaN
-    longitude: parseFloat(document.getElementById("longitudeInput").value) || 0, // Default to 0 if NaN
+    latitude: parseFloat(document.getElementById("latitudeInput").value),
+    longitude: parseFloat(document.getElementById("longitudeInput").value),
     startDate: startDate,
     endDate: endDate,
     timeGranularity:
       document.querySelector(
-        'input[name="Temporal Resolution"]:checked', // Corrected name attribute if needed
-      )?.value || "Daily", // Default if none checked
-    dataSource: document.getElementById("dataSource").value, // Get selected data source
-    // Include parameters only if needed by the specific backend endpoint
-    // parameters: Array.from(document.querySelectorAll('input[name="parameters"]:checked')).map(cb => cb.value),
-    // tiltAngle: parseFloat(document.getElementById('tiltangle')?.value) || null // Include tilt if GTI is selected and field visible
+        'input[name="Temporal Resolution"]:checked',
+      )?.value || "Daily",
+    dataSource: document.getElementById("dataSource").value,
+    mode : document.querySelector('input[name="timeRangeType"]:checked').value,
+    tiltAngle: document.getElementById("tiltangle").value,
+    startyear: document.getElementById("startYear").value,
+    endyear: document.getElementById("endYear").value,
   };
-
-  // Conditionally add tilt angle if GTI is checked
-  const gtiChecked = document.getElementById("gti")?.checked;
-  if (gtiChecked) {
-    params.tiltAngle = parseFloat(document.getElementById("tiltangle")?.value);
-    if (isNaN(params.tiltAngle)) {
-      // Handle potential NaN if input is invalid - maybe default or throw error earlier
-      console.warn("Invalid Tilt Angle input");
-      // Decide how to handle this - maybe prevent submission in validation
-    }
-  }
-
   return params;
 }
 
@@ -551,13 +544,13 @@ function updateChart(dataPoints, granularity) {
     return;
   }
 
-  // Map granularity to valid Chart.js time unit
+  // Map resolution to valid Chart.js time unit
   const timeUnitMap = {
     Hourly: "hour",
     Daily: "day",
     Monthly: "month",
   };
-  const timeUnit = timeUnitMap[granularity] || "day"; // Default to day
+  const timeUnit = timeUnitMap[granularity] || "day"; 
 
   // Determine appropriate downsampling (optional, adjust as needed)
   const maxPoints =
@@ -595,12 +588,12 @@ function updateChart(dataPoints, granularity) {
   if (granularity === "Hourly") {
     chartLabel = `Hourly Irradiance (W/m²)`;
   } else if (granularity === "Daily") {
-    chartLabel = `Daily Average Irradiance (W/m²)`; // Or Daily Total, depending on backend calculation
+    chartLabel = `Daily Average Irradiance (W/m²)`;
   } else if (granularity === "Monthly") {
-    chartLabel = `Monthly Average Irradiance (W/m²)`; // Or Monthly Total
+    chartLabel = `Monthly Average Irradiance (W/m²)`;
   }
   irradianceChart.data.datasets[0].label = chartLabel;
-  irradianceChart.options.plugins.title = { display: false }; // Remove the 'No data' title if data is present
+  irradianceChart.options.plugins.title = { display: false };
 
   irradianceChart.update();
 }
@@ -697,6 +690,110 @@ function handleError(error, buttonElement = null, buttonText = "Action") {
   }
 }
 
-// --- Removed Obsolete Functions ---
-// fetchCAMSData and fetchNASAData are removed as their logic is now
-// integrated into handleVisualize and handleDownload based on dataSource.
+document.addEventListener("DOMContentLoaded", () => {
+  const modeRadios = document.querySelectorAll('input[name="timeRangeType"]');
+  const dateFields = document.getElementById("dateRangeFields");
+  const yearFields = document.getElementById("yearRangeFields");
+
+  function updateSelectionMode() {
+    const selectedRadio = document.querySelector(
+      'input[name="timeRangeType"]:checked',
+    );
+
+    const resolutionbuttons = document.getElementById("resolutionbtns");
+
+    if (!selectedRadio) {
+      console.error("No time range type radio button is checked!");
+      return;
+    }
+
+    const selectedMode = selectedRadio.value;
+
+    if (selectedMode === "date") {
+      dateFields.style.display = "";
+      yearFields.style.display = "none";
+      resolutionbuttons.style.display = "";
+    } else {
+      dateFields.style.display = "none";
+      yearFields.style.display = "";
+      resolutionbuttons.style.display = "none";
+    }
+  }
+
+  modeRadios.forEach((radio) => {
+    radio.addEventListener("change", updateSelectionMode);
+  });
+  updateSelectionMode();
+});
+
+
+// --- Corrected avgChart function ---
+function avgChart(meanData, upper, lower, date_labels) {
+  const ctx = document.getElementById("irradianceChart").getContext("2d");
+
+  // Destroy previous chart instance if it exists
+  if (irradianceChart) {
+    irradianceChart.destroy();
+  }
+
+  // --- Build datasets ---
+  const data = {
+    labels: date_labels, 
+    datasets: [
+      {
+        // invisible lower boundary
+        data: lower,
+        fill: false, 
+        pointRadius: 0,
+        borderWidth: 1, 
+      },
+      {
+        // shaded area (Range)
+        data: upper,
+        fill: "-1", 
+        backgroundColor: "rgba(186, 185, 245, 0.5)", 
+        pointRadius: 0,
+        borderWidth: 1,
+      },
+      {
+        // mean line
+        label: "Mean GHI",
+        data: meanData,
+        borderColor: "rgba(19,18,254,1)",
+        borderWidth: 3, 
+        pointRadius: 1,
+        fill: false,
+        tension: 0.2, 
+        order: 2
+      },
+    ],
+  };
+
+  // --- 4. Config & render ---
+  irradianceChart = new Chart(ctx, { 
+    type: "line",
+    data: data, 
+    options: {
+      responsive: true,
+      maintainAspectRatio: false, 
+      scales: {
+        x: {
+          type: "category", 
+          title: { display: true, text: "Date" },
+        },
+        y: {
+          title: { display: true, text: "GHI (W/m²)" },
+          suggestedMin: 0,
+        },
+      },
+      plugins: {
+        legend: { position: "top" },
+        tooltip: {
+            mode: 'index', 
+            intersect: false,
+        }
+      },
+      interaction: { mode: "index", intersect: false },
+    },
+  });
+}

@@ -37,10 +37,4 @@ class NASAPowerFetchData:
         response.raise_for_status()
         json_data = response.json()
         all_parameters = json_data['properties']['parameter']
-        return NASAPowerMultiDataResult(
-            data=all_parameters,
-            products=products,
-            location=location,
-            start_date=start_date,
-            end_date=end_date
-        )
+        return all_parameters

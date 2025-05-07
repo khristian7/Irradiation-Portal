@@ -68,14 +68,34 @@ class NASAPowerMultiDataResult:
         sorted_ts = sorted(data.keys())
         return np.array([data[ts] for ts in sorted_ts])
 
-    def to_dataframe(self):
-        df = pd.DataFrame()
+    def to_dataframe(self) -> pd.DataFrame:
+        """
+        Return all requested parameters as a DataFrame indexed by timestamp.
+        
+        """
+        # Build one Series per product, with a proper DatetimeIndex
+        series_list = []
         for product in self._products:
-            data = self.get_parameter_data(product)
-            sorted_ts = sorted(data.keys())
-            df[product.name] = [data[ts] for ts in sorted_ts]
-        df['timestamp'] = sorted_ts
-        df['timestamp'] = pd.to_datetime(df['timestamp'], format='%Y%m%d')
-        return df.set_index('timestamp')
+            data = self.get_parameter_data(product) or {}
+            if not data:
+                continue
+            # Sort the keys, parse them into pandas Timestamps
+            sorted_keys = sorted(data.keys())
+            dates = pd.to_datetime(sorted_keys, format='%Y%m%d')
+            values = [data[k] for k in sorted_keys]
+            s = pd.Series(data=values, index=dates, name=product.name)
+            series_list.append(s)
+
+        # Concatenate all series into a single DataFrame
+        if series_list:
+            df = pd.concat(series_list, axis=1)
+            df.index.name = 'timestamp'
+        else:
+            # No data: return empty DataFrame with proper index name
+            df = pd.DataFrame()
+            df.index.name = 'timestamp'
+
+        return df
+
 
 
