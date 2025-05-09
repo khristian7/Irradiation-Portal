@@ -359,6 +359,12 @@
 
 
   <script>
+flatpickr(".datepicker", {
+    dateFormat: "Y-m-d",
+    altInput: true,
+    altFormat: "d/m/Y",
+  });
+
     document.addEventListener('DOMContentLoaded', function () {
       const gtiCheckbox = document.getElementById('gti');
       const tiltAngleField = document.querySelector('.tilt-angle-field');

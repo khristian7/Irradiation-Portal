@@ -1,6 +1,6 @@
 // ----------------------------------MAP section -----------------------------
 let map = null;
-let clickedMarker = null; 
+let clickedMarker = null;
 let irradianceChart = null; // Ensure this global variable is used
 
 document.addEventListener("DOMContentLoaded", function () {
@@ -8,15 +8,14 @@ document.addEventListener("DOMContentLoaded", function () {
   initializeMap();
 
   // --- Initialize Chart ---
-  initializeChart();
+  initializeChart(); // Sets up the basic chart shell
 
   // --- Initialize UI Elements & Event Listeners ---
   setupEventListeners();
 
   // --- Initialize Date Pickers ---
   flatpickr(".datepicker", {
-    dateFormat: "Y-m-d", // Use ISO format (YYYY-MM-DD) for consistency
-    // If you still want d/m/Y display, use altInput and altFormat:
+    dateFormat: "Y-m-d",
     altInput: true,
     altFormat: "d/m/Y",
   });
@@ -56,29 +55,18 @@ function initializeMap() {
       map.removeLayer(clickedMarker);
     }
     clickedMarker = L.marker(e.latlng).addTo(map);
-
-    // Trigger validation check after map click
     validateAndToggleButton();
   });
 }
 
 function initializeChart() {
+  // This function initializes the chart object with basic configuration.
+  // updateChart will be responsible for populating datasets.
   const chartConfig = {
     type: "line",
     data: {
       labels: [],
-      datasets: [
-        {
-          label: "Irradiance (W/m²)", 
-          data: [],
-          borderColor: "#4e73df",
-          backgroundColor: "rgba(78, 115, 223, 0.05)",
-          borderWidth: 1,
-          pointRadius: 2,
-          tension: 0.4, // Smoother lines
-          fill: true,
-        },
-      ],
+      datasets: [], // Datasets will be added dynamically by updateChart
     },
     options: {
       responsive: true,
@@ -88,27 +76,34 @@ function initializeChart() {
         intersect: false,
       },
       plugins: {
-        // Consider adding chartjs-plugin-zoom if needed:
-        // zoom: { pan: { enabled: true }, zoom: { wheel: { enabled: true }, pinch: { enabled: true } } },
         tooltip: {
           callbacks: {
-            title: (context) => context[0]?.label || "", // Safer access
+            title: (context) => context[0]?.label || "",
           },
         },
         legend: {
-          position: "top", // Position legend at the top
+          position: "top",
+          display: true, // Ensure legend is displayed
         },
+        title: { // Placeholder for potential "No data" message
+          display: false,
+          text: "",
+          padding: {
+            top: 10,
+            bottom: 10
+          }
+        }
       },
       scales: {
         x: {
           type: "time",
           time: {
-            unit: "day", 
-            tooltipFormat: "PPpp", 
+            // unit will be set by updateChart based on granularity
+            tooltipFormat: "PPpp", // e.g., Sep 4, 1986, 8:30 PM
             displayFormats: {
-              hour: "HH:mm", 
-              day: "MMM d",
-              month: "MMM yy",
+              hour: "HH:mm", // e.g., 14:30
+              day: "MMM d", // e.g., Sep 4
+              month: "MMM yy", // e.g., Sep 86
             },
           },
           title: { display: true, text: "Time" },
@@ -123,7 +118,6 @@ function initializeChart() {
   };
 
   const ctx = document.getElementById("irradianceChart").getContext("2d");
-  // Destroy previous chart instance if it exists
   if (irradianceChart) {
     irradianceChart.destroy();
   }
@@ -131,7 +125,6 @@ function initializeChart() {
 }
 
 function setupEventListeners() {
-  // Map Search
   document
     .getElementById("searchBtn")
     .addEventListener("click", searchLocation);
@@ -143,7 +136,6 @@ function setupEventListeners() {
       }
     });
 
-  // Form Buttons
   document
     .getElementById("visualizeBtn")
     .addEventListener("click", handleVisualize);
@@ -151,37 +143,34 @@ function setupEventListeners() {
     .getElementById("downloadBtn")
     .addEventListener("click", handleDownload);
   document.getElementById("cancelBtn").addEventListener("click", resetForm);
-  // Input validation on change
+
   const formInputs = document.querySelectorAll(
-    '.form-control, input[type="radio"], input[type="checkbox"], select', // Include select
+    '.form-control, input[type="radio"], input[type="checkbox"], select',
   );
   formInputs.forEach((input) => {
     input.addEventListener("change", validateAndToggleButton);
   });
 
-  // Initial validation check
   validateAndToggleButton();
 }
 
 function setupTiltAngleToggle() {
-  const gtiCheckbox = document.getElementById("gti"); // Assuming 'gti' is the ID for the GTI parameter checkbox
+  const gtiCheckbox = document.getElementById("gti");
   const tiltAngleField = document.querySelector(".tilt-angle-field");
 
-  if (!gtiCheckbox || !tiltAngleField) return; // Exit if elements not found
+  if (!gtiCheckbox || !tiltAngleField) return;
 
   function toggleTiltField() {
     tiltAngleField.style.display = gtiCheckbox.checked ? "block" : "none";
   }
 
-  toggleTiltField(); // Initial check
+  toggleTiltField();
   gtiCheckbox.addEventListener("change", toggleTiltField);
 }
 
-// --- Event Handlers & Actions ---
-
 function searchLocation() {
   const query = document.getElementById("searchInput").value.trim();
-  if (!query) return; // Don't search if empty
+  if (!query) return;
 
   const url = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}`;
 
@@ -196,9 +185,8 @@ function searchLocation() {
       if (data && data.length > 0) {
         const lat = parseFloat(data[0].lat);
         const lon = parseFloat(data[0].lon);
-        map.setView([lat, lon], 13); // Zoom in closer on search result
+        map.setView([lat, lon], 13);
 
-        // Update inputs and marker
         document.getElementById("latitudeInput").value = lat.toFixed(4);
         document.getElementById("longitudeInput").value = lon.toFixed(4);
         document.getElementById("selectedCoords").textContent =
@@ -208,7 +196,7 @@ function searchLocation() {
           map.removeLayer(clickedMarker);
         }
         clickedMarker = L.marker([lat, lon]).addTo(map);
-        validateAndToggleButton(); // Re-validate after setting coords
+        validateAndToggleButton();
       } else {
         alert("Location not found.");
       }
@@ -218,8 +206,7 @@ function searchLocation() {
       alert(`Failed to search location: ${error.message}`);
     });
 }
-//-----------Function to visualize the data-------------------
-// This function handles the visualization of data based on user input
+
 async function handleVisualize() {
   const visualizeBtn = document.getElementById("visualizeBtn");
   if (!validateInputs().valid) {
@@ -231,24 +218,22 @@ async function handleVisualize() {
   const dataSource = params.dataSource;
   const mode = params.mode;
 
-  // Determine the correct API endpoint
   let apiUrl = "";
   switch (dataSource) {
     case "model":
       apiUrl = "/api/model";
       break;
     case "CAMS_RAD":
-      apiUrl = "/api/cams"; 
+      apiUrl = "/api/cams";
       break;
     case "NASA":
       apiUrl = "/api/nasa";
       break;
     default:
-      alert("Invalid model selected.");
+      alert("Invalid data source selected.");
       return;
   }
 
-  // Show loading state
   setLoadingState(visualizeBtn, true, "Processing...");
 
   const controller = new AbortController();
@@ -263,7 +248,7 @@ async function handleVisualize() {
     );
   }, 60000);
 
-try {
+  try {
     const response = await fetch(apiUrl, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -274,74 +259,60 @@ try {
     clearTimeout(timeoutId);
 
     if (!response.ok) {
-      // Try to get error message from backend response
       let errorMsg = `HTTP error! status: ${response.status}`;
       try {
         const errorData = await response.json();
-        errorMsg = errorData.error || errorMsg; // Use backend error if available
-      } catch (e) {
-        // Ignore if response is not JSON
-      }
+        errorMsg = errorData.error || errorMsg;
+      } catch (e) { /* Ignore if response is not JSON */ }
       throw new Error(errorMsg);
     }
 
     const result = await response.json();
 
-    if (mode === "date"){
+    if (mode === "date") {
+      // Validate basic structure of the result
+      if (!result || !Array.isArray(result.data)) {
+        throw new Error("Invalid data format received from the server (expected an array).");
+      }
 
-    // Basic validation of the received data structure
-    if (!result || !Array.isArray(result.data)) {
-      throw new Error("Invalid data format received from the server.");
+      // Validate the content of the data if array is not empty
+      if (result.data.length > 0) {
+        const firstPoint = result.data[0];
+        if (
+          !firstPoint ||
+          !firstPoint.datetime || // Expecting 'datetime' key
+          (firstPoint.GHI === undefined && firstPoint.DHI === undefined && firstPoint.DNI === undefined && firstPoint.irradiance === undefined) // Expecting at least one irradiance type
+        ) {
+          throw new Error(
+            "Received data points are missing required fields (e.g., datetime, GHI/DHI/DNI, or irradiance).",
+          );
+        }
+      }
+      // Call the updated chart function
+      updateChart(result.data, params.timeGranularity, dataSource);
+      updateSummary(params);
+
+    } else if (mode === "year") {
+      if (!result || !Array.isArray(result.data)) {
+        throw new Error("Invalid data format for year mode received from the server.");
+      }
+      // Assuming 'year' mode data structure is: { datetime (month name/number), mean, upper, lower }
+      // This part might need adjustment if NASA/CAMS provide different structures for yearly averages.
+      const stats = result.data;
+      const dateLabels = stats.map(pt => pt.datetime); // Or month, year etc.
+      const meanSeries = stats.map(pt => pt.mean); // Assuming 'mean' is GHI mean
+      const upperSeries = stats.map(pt => pt.upper);
+      const lowerSeries = stats.map(pt => pt.lower);
+
+      avgChart(meanSeries, upperSeries, lowerSeries, dateLabels); // avgChart might also need updates for multi-component averages
     }
 
-    // --- Process and update chart ---
-    // Ensure data has the expected fields (datetime/irradiance or year/month/irradiance)
-    const firstPoint = result.data[0];
-    if (
-      !firstPoint ||
-      (!firstPoint.datetime && !(firstPoint.year && firstPoint.month)) ||
-      firstPoint.irradiance === undefined
-    ) {
-      throw new Error(
-        "Received data points are missing required fields (datetime/year+month or irradiance).",
-      );
+  } catch (error) {
+    if (error.name !== "AbortError") {
+      handleError(error, visualizeBtn, "Visualize");
     }
-  
-
-    updateChart(result.data, params.timeGranularity);
-    updateSummary(params);
-  } 
-//-----------THIS IS THE POINT I AM EDITING-------------------
-  else if (mode === "year") {
-    // Handle the year mode
-    if (!result || !Array.isArray(result.data)) {
-      throw new Error("Invalid data format received from the server.");
-    }
-
-    // `stats` is an array of { datetime, GHI, upper, lower }
-    const stats = result.data;
-
-    // pull out each series:
-    const dateLabels =   stats.map(pt => pt.datetime);
-    const meanSeries =   stats.map(pt => pt.mean);
-    const upperSeries =  stats.map(pt => pt.upper);
-    const lowerSeries =  stats.map(pt => pt.lower);
-
-    avgChart(meanSeries, upperSeries, lowerSeries, dateLabels); // Call the corrected avgChart
- 
-  }
-    
-  }
-catch (error) {
-  if (error.name !== "AbortError") {
-    // Don't show generic error for timeouts handled above
-    handleError(error, visualizeBtn, "Visualize");
-  }
-    
   } finally {
-    // Reset UI state (unless it was a timeout handled in setTimeout)
     if (controller.signal.aborted === false) {
-      // Check if aborted by timeout
       setLoadingState(
         visualizeBtn,
         false,
@@ -351,252 +322,123 @@ catch (error) {
   }
 }
 
-async function handleDownload() {
-  const downloadBtn = document.getElementById("downloadBtn");
-  if (!validateInputs().valid) {
-    alert("Please fix the errors in the form before downloading.");
-    return;
-  }
-
-  const params = getFormData(); // Includes dataSource now
-  const format = document.querySelector(
-    'input[name="outputFormat"]:checked',
-  ).value;
-
-  setLoadingState(downloadBtn, true, "Preparing...");
-
-  try {
-    const response = await fetch(`/api/export?format=${format}`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(params), // Send all params including dataSource
-    });
-
-    if (!response.ok) {
-      let errorMsg = `Download failed with status: ${response.status}`;
-      try {
-        const errorData = await response.json();
-        errorMsg = errorData.error || errorMsg;
-      } catch (e) {
-        /* Ignore if response not JSON */
-      }
-      throw new Error(errorMsg);
-    }
-
-    // Create filename with proper extension and timestamp
-    const timestamp = new Date().toISOString().split("T")[0].replace(/-/g, ""); // YYYYMMDD
-    const filename = `solar_data_${params.dataSource}_${timestamp}.${format.toLowerCase()}`;
-
-    // Handle blob download
-    const blob = await response.blob();
-    const url = window.URL.createObjectURL(blob);
-    const link = document.createElement("a");
-    link.href = url;
-    link.download = filename;
-    document.body.appendChild(link);
-    link.click();
-
-    // Clean up
-    document.body.removeChild(link);
-    window.URL.revokeObjectURL(url);
-  } catch (error) {
-    console.error("Download error:", error);
-    handleError(error, downloadBtn, "Download"); // Show error to user
-  } finally {
-    setLoadingState(
-      downloadBtn,
-      false,
-      '<i class="bi bi-download me-1"></i>Download',
-    );
-  }
-}
-
-function resetForm() {
-  // Reset input fields
-  document.getElementById("dataRequestForm").reset(); // Reset the form itself
-
-  // Reset specific fields that might not be covered by form.reset()
-  document.getElementById("latitudeInput").value = "";
-  document.getElementById("longitudeInput").value = "";
-  document.getElementById("startDate").value = ""; // Clear flatpickr inputs
-  document.getElementById("endDate").value = "";
-  flatpickr(".datepicker").clear(); // Clear flatpickr instances specifically
-
-  // Reset map marker and view
-  if (clickedMarker) {
-    map.removeLayer(clickedMarker);
-    clickedMarker = null;
-  }
-  map.setView([0.31166, 32.5974], 8); // Reset to default view
-
-  // Reset coordinate displays
-  document.getElementById("selectedCoords").textContent = "None selected";
-  document.getElementById("cursorCoords").textContent = "0.0000, 0.0000"; // Reset cursor display
-
-  // Clear the chart
-  if (irradianceChart) {
-    irradianceChart.data.labels = [];
-    irradianceChart.data.datasets[0].data = [];
-    irradianceChart.update();
-  }
-
-  // Reset summary card to defaults
-  updateSummary(null); // Pass null to indicate reset
-
-  // Re-validate buttons (they should become disabled)
-  validateAndToggleButton();
-
-  // Reset tilt angle field visibility
-  setupTiltAngleToggle();
-}
-
-
-// --- Helper Functions ---
-
-function validateInputs() {
-  const lat = parseFloat(document.getElementById("latitudeInput").value);
-  const lon = parseFloat(document.getElementById("longitudeInput").value);
-  const startDateStr = document.getElementById("startDate").value;
-  const endDateStr = document.getElementById("endDate").value;
-  const dataSource = document.getElementById("dataSource").value;
-
-  let errors = [];
-/*
-  if (isNaN(lat) || lat < -90 || lat > 90) {
-    errors.push("Latitude must be a number between -90 and 90.");
-  }
-  if (isNaN(lon) || lon < -180 || lon > 180) {
-    errors.push("Longitude must be a number between -180 and 180.");
-  }
-  if (!startDateStr) {
-    errors.push("Start date is required.");
-  }
-  if (!endDateStr) {
-    errors.push("End date is required.");
-  }
-  if (startDateStr && endDateStr) {
-    const startDate = new Date(startDateStr);
-    const endDate = new Date(endDateStr);
-    if (startDate > endDate) {
-      errors.push("Start date cannot be after end date.");
-    }
-  }
-    */
-  if (!dataSource) {
-    errors.push("Please select a data source.");
-  }
-
-  // Add more validation as needed (e.g., for tilt angle if GTI is checked)
-
-  if (errors.length > 0) {
-    // Optionally display errors to the user in a dedicated area
-    // console.warn("Validation Errors:", errors);
-    return { valid: false, message: errors.join("\n") };
-  }
-
-  return { valid: true, message: "" };
-}
-//#TODO: Add validation for tilt angle if GTI is selected and also valiate the avg plot
-function validateAndToggleButton() {
-  const { valid } = validateInputs();
-  document.getElementById("visualizeBtn").disabled = !valid;
-  document.getElementById("downloadBtn").disabled = !valid;
-}
-
-function getFormData() {
-  // Assumes flatpickr is configured to output 'YYYY-MM-DD'
-  const startDate = document.getElementById("startDate").value;
-  const endDate = document.getElementById("endDate").value;
-
-  const params = {
-    latitude: parseFloat(document.getElementById("latitudeInput").value),
-    longitude: parseFloat(document.getElementById("longitudeInput").value),
-    startDate: startDate,
-    endDate: endDate,
-    timeGranularity:
-      document.querySelector(
-        'input[name="Temporal Resolution"]:checked',
-      )?.value || "Daily",
-    dataSource: document.getElementById("dataSource").value,
-    mode : document.querySelector('input[name="timeRangeType"]:checked').value,
-    tiltAngle: document.getElementById("tiltangle").value,
-    startyear: document.getElementById("startYear").value,
-    endyear: document.getElementById("endYear").value,
-  };
-  return params;
-}
-
-function updateChart(dataPoints, granularity) {
+/**
+ * Updates the chart with new data, dynamically handling GHI, DHI, DNI.
+ * Assumes dataPoints is an array of objects, where each object has a 'datetime' field (ISO string)
+ * and potentially 'GHI', 'DHI', 'DNI' fields.
+ * If only 'irradiance' is present (for backward compatibility with old model API), it will be used as GHI.
+ * @param {Array<Object>} dataPoints - Array of data points from the API.
+ * @param {string} granularity - Temporal granularity ('Hourly', 'Daily', 'Monthly').
+ * @param {string} dataSource - The source of the data ('model', 'NASA', 'CAMS_RAD').
+ */
+function updateChart(dataPoints, granularity, dataSource) {
   if (!irradianceChart) {
     console.error("Chart is not initialized.");
-    return;
+    initializeChart(); // Try to re-initialize if not present
+    if (!irradianceChart) return; // Still not there, bail
   }
+
+  // Clear previous datasets and labels
+  irradianceChart.data.labels = [];
+  irradianceChart.data.datasets = [];
+  irradianceChart.options.plugins.title.display = false; // Hide "No data" message by default
+
   if (!dataPoints || dataPoints.length === 0) {
     console.warn("No data points received to update the chart.");
-    // Optionally clear the chart or show a message
-    irradianceChart.data.labels = [];
-    irradianceChart.data.datasets[0].data = [];
-    irradianceChart.options.plugins.title = {
-      display: true,
-      text: "No data available for selected parameters.",
-    }; // Show message on chart
+    irradianceChart.options.plugins.title.text = "No data available for selected parameters.";
+    irradianceChart.options.plugins.title.display = true;
     irradianceChart.update();
     return;
   }
 
-  // Map resolution to valid Chart.js time unit
-  const timeUnitMap = {
-    Hourly: "hour",
-    Daily: "day",
-    Monthly: "month",
-  };
-  const timeUnit = timeUnitMap[granularity] || "day"; 
+  // Map granularity to Chart.js time unit
+  const timeUnitMap = { Hourly: "hour", Daily: "day", Monthly: "month" };
+  const timeUnit = timeUnitMap[granularity] || "day";
 
-  // Determine appropriate downsampling (optional, adjust as needed)
-  const maxPoints =
-    { Hourly: 1000, Daily: 730, Monthly: 120 }[granularity] || 500;
+  // Optional: Downsample data (adjust maxPoints as needed)
+  const maxPoints = { Hourly: 1000, Daily: 730, Monthly: 240 }[granularity] || 500;
   const sampledData = downsampleData(dataPoints, maxPoints);
 
-  let labels = [];
-  let values = [];
-
-  // Process data based on expected structure (adjust if CAMS/NASA differ)
+  // Prepare labels (x-axis)
+  // Assumes backend provides 'datetime' as an ISO string for all data sources.
   try {
-    if (granularity === "Monthly") {
-      labels = sampledData.map(
-        (point) => new Date(point.year, point.month - 1, 1),
-      ); // Use first day of month
-      values = sampledData.map((point) => point.irradiance);
-    } else {
-      // Hourly or Daily
-      labels = sampledData.map((point) => new Date(point.datetime)); // Assumes datetime string
-      values = sampledData.map((point) => point.irradiance);
-    }
+    irradianceChart.data.labels = sampledData.map(point => new Date(point.datetime));
   } catch (e) {
-    console.error("Error processing data points for chart:", e);
-    handleError(new Error("Could not process data format for charting."));
-    return; // Stop update if data format is wrong
+    console.error("Error processing datetime for chart labels:", e);
+    handleError(new Error("Could not parse datetime values for charting."));
+    irradianceChart.options.plugins.title.text = "Error: Invalid date format in data.";
+    irradianceChart.options.plugins.title.display = true;
+    irradianceChart.update();
+    return;
   }
 
-  // Update chart data and options
-  irradianceChart.data.labels = labels;
-  irradianceChart.data.datasets[0].data = values;
+
+  // Define dataset configurations (colors, labels)
+  const datasetConfigs = {
+    GHI: { label: 'GHI', borderColor: '#4e73df', backgroundColor: 'rgba(78, 115, 223, 0.1)', fill: true },
+    DHI: { label: 'DHI', borderColor: '#1cc88a', backgroundColor: 'rgba(28, 200, 138, 0.1)', fill: true },
+    DNI: { label: 'DNI', borderColor: '#f6c23e', backgroundColor: 'rgba(246, 194, 62, 0.1)', fill: true },
+    // Fallback for 'model' if it only sends 'irradiance' and backend isn't updated
+    irradiance: { label: 'Irradiance', borderColor: '#4e73df', backgroundColor: 'rgba(78, 115, 223, 0.1)', fill: true }
+  };
+
+  const availableDataKeys = ['GHI', 'DHI', 'DNI'];
+  let dataPlotted = false;
+
+  availableDataKeys.forEach(key => {
+    // Check if the key exists and has at least one non-null value in the sampled data
+    if (sampledData.some(point => point[key] !== null && point[key] !== undefined)) {
+      const values = sampledData.map(point => point[key]);
+      irradianceChart.data.datasets.push({
+        label: datasetConfigs[key].label + ` (W/m²)`,
+        data: values,
+        borderColor: datasetConfigs[key].borderColor,
+        backgroundColor: datasetConfigs[key].backgroundColor,
+        borderWidth: 1.5,
+        pointRadius: granularity === 'Hourly' ? 0 : (granularity === 'Daily' ? 1 : 2), // Smaller/no points for hourly
+        tension: 0.3,
+        fill: datasetConfigs[key].fill,
+      });
+      dataPlotted = true;
+    }
+  });
+
+  // Fallback for old 'model' data if it uses 'irradiance' and GHI/DHI/DNI are not present
+  if (!dataPlotted && sampledData.some(point => point.irradiance !== null && point.irradiance !== undefined)) {
+    const values = sampledData.map(point => point.irradiance);
+    irradianceChart.data.datasets.push({
+      label: datasetConfigs.irradiance.label + ` (W/m²)`, // Use specific label
+      data: values,
+      borderColor: datasetConfigs.irradiance.borderColor,
+      backgroundColor: datasetConfigs.irradiance.backgroundColor,
+      borderWidth: 1.5,
+      pointRadius: granularity === 'Hourly' ? 0 : 1,
+      tension: 0.3,
+      fill: datasetConfigs.irradiance.fill,
+    });
+    dataPlotted = true;
+  }
+
+  if (!dataPlotted) {
+    console.warn("No plottable GHI, DHI, or DNI data found in the provided dataPoints.");
+    irradianceChart.options.plugins.title.text = "No GHI, DHI, or DNI data to display.";
+    irradianceChart.options.plugins.title.display = true;
+  }
+
+  // Update chart options
   irradianceChart.options.scales.x.time.unit = timeUnit;
-
-  // Update chart title/label based on granularity
-  let chartLabel = `Irradiance (W/m²)`; // Base label
-  if (granularity === "Hourly") {
-    chartLabel = `Hourly Irradiance (W/m²)`;
-  } else if (granularity === "Daily") {
-    chartLabel = `Daily Average Irradiance (W/m²)`;
-  } else if (granularity === "Monthly") {
-    chartLabel = `Monthly Average Irradiance (W/m²)`;
+  // Adjust y-axis label if only one type of data is plotted, or keep generic
+  if (irradianceChart.data.datasets.length === 1) {
+    // irradianceChart.options.scales.y.title.text = irradianceChart.data.datasets[0].label; // This might be too long
+  } else {
+    irradianceChart.options.scales.y.title.text = "Irradiance (W/m²)";
   }
-  irradianceChart.data.datasets[0].label = chartLabel;
-  irradianceChart.options.plugins.title = { display: false };
+  irradianceChart.options.plugins.legend.display = irradianceChart.data.datasets.length > 1;
+
 
   irradianceChart.update();
 }
+
 
 function downsampleData(data, maxPoints) {
   if (!data || data.length <= maxPoints) return data;
@@ -605,9 +447,8 @@ function downsampleData(data, maxPoints) {
 }
 
 function updateSummary(params) {
-  const defaultText = "N/A"; // Text to show if params are null (on reset)
+  const defaultText = "N/A";
 
-  // --- Location ---
   document.querySelector(".summary-card .badge-latitude").textContent = params
     ? `${params.latitude?.toFixed(4)}°`
     : defaultText;
@@ -615,44 +456,40 @@ function updateSummary(params) {
     ? `${params.longitude?.toFixed(4)}°`
     : defaultText;
 
-  // --- Time Parameters ---
   document.querySelector(".summary-card .text-granularity").textContent =
     params?.timeGranularity || defaultText;
-  // Format dates for display (assuming YYYY-MM-DD input)
+
   const displayDateFormat = { year: "numeric", month: "short", day: "numeric" };
   document.querySelector(".summary-card .text-start-date").textContent =
     params?.startDate
-      ? new Date(params.startDate + "T00:00:00Z").toLocaleDateString(
-          undefined,
-          displayDateFormat,
-        )
-      : defaultText; // Add time/zone for correct parsing
+      ? new Date(params.startDate + "T00:00:00Z").toLocaleDateString( // Ensure UTC context for date part
+        undefined,
+        displayDateFormat,
+      )
+      : defaultText;
   document.querySelector(".summary-card .text-end-date").textContent =
     params?.endDate
-      ? new Date(params.endDate + "T00:00:00Z").toLocaleDateString(
-          undefined,
-          displayDateFormat,
-        )
+      ? new Date(params.endDate + "T00:00:00Z").toLocaleDateString( // Ensure UTC context for date part
+        undefined,
+        displayDateFormat,
+      )
       : defaultText;
 
-  // --- Data Source ---
   const dataSourceEl = document.querySelector(
     ".summary-card .text-data-source",
   );
   if (params?.dataSource) {
-    // Get the display text from the dropdown option
     const selectEl = document.getElementById("dataSource");
     const selectedOption = selectEl.querySelector(
       `option[value="${params.dataSource}"]`,
     );
     dataSourceEl.textContent = selectedOption
       ? selectedOption.textContent
-      : params.dataSource; // Fallback to value if text not found
+      : params.dataSource;
   } else {
     dataSourceEl.textContent = defaultText;
   }
 
-  // --- Footer ---
   document.querySelector(".summary-card .card-footer").textContent =
     `Last updated: ${new Date().toLocaleString()}`;
 }
@@ -660,12 +497,10 @@ function updateSummary(params) {
 function setLoadingState(buttonElement, isLoading, loadingText = "Loading...") {
   if (isLoading) {
     buttonElement.disabled = true;
-    // Store original text
     buttonElement.dataset.originalText = buttonElement.innerHTML;
     buttonElement.innerHTML = `<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> ${loadingText}`;
   } else {
     buttonElement.disabled = false;
-    // Restore original text or set new text
     buttonElement.innerHTML = buttonElement.dataset.originalText || loadingText;
   }
 }
@@ -677,10 +512,8 @@ function handleError(error, buttonElement = null, buttonText = "Action") {
       ? "Request timed out. Please try again with a smaller date range or simpler request."
       : error.message || "An unknown error occurred.";
 
-  // Display error to user (e.g., using an alert or a dedicated error message area)
-  alert(`Error: ${errorMessage}`);
+  alert(`Error: ${errorMessage}`); // Simple alert, consider a more integrated UI element
 
-  // Reset button state if provided
   if (buttonElement) {
     setLoadingState(
       buttonElement,
@@ -690,107 +523,226 @@ function handleError(error, buttonElement = null, buttonText = "Action") {
   }
 }
 
+function resetForm() {
+  document.getElementById("dataRequestForm").reset();
+  document.getElementById("latitudeInput").value = "";
+  document.getElementById("longitudeInput").value = "";
+  document.getElementById("startDate").value = "";
+  document.getElementById("endDate").value = "";
+  flatpickr(".datepicker").clear();
+
+  if (clickedMarker) {
+    map.removeLayer(clickedMarker);
+    clickedMarker = null;
+  }
+  map.setView([0.31166, 32.5974], 8);
+
+  document.getElementById("selectedCoords").textContent = "None selected";
+  document.getElementById("cursorCoords").textContent = "0.0000, 0.0000";
+
+  if (irradianceChart) {
+    irradianceChart.data.labels = [];
+    irradianceChart.data.datasets = [];
+    irradianceChart.options.plugins.title.text = ""; // Clear any "No data" message
+    irradianceChart.options.plugins.title.display = false;
+    irradianceChart.update();
+  }
+
+  updateSummary(null);
+  validateAndToggleButton();
+  setupTiltAngleToggle();
+}
+
+function validateInputs() {
+  const lat = parseFloat(document.getElementById("latitudeInput").value);
+  const lon = parseFloat(document.getElementById("longitudeInput").value);
+  const startDateStr = document.getElementById("startDate").value;
+  const endDateStr = document.getElementById("endDate").value;
+  const dataSource = document.getElementById("dataSource").value;
+  const mode = document.querySelector('input[name="timeRangeType"]:checked').value;
+
+
+  let errors = [];
+
+  if (isNaN(lat) || lat < -90 || lat > 90) {
+    errors.push("Latitude must be a number between -90 and 90.");
+  }
+  if (isNaN(lon) || lon < -180 || lon > 180) {
+    errors.push("Longitude must be a number between -180 and 180.");
+  }
+
+  if (mode === "date") {
+    if (!startDateStr) errors.push("Start date is required.");
+    if (!endDateStr) errors.push("End date is required.");
+    if (startDateStr && endDateStr) {
+      const startDate = new Date(startDateStr);
+      const endDate = new Date(endDateStr);
+      if (startDate > endDate) {
+        errors.push("Start date cannot be after end date.");
+      }
+    }
+  } else if (mode === "year") {
+    const startYear = parseInt(document.getElementById("startYear").value);
+    const endYear = parseInt(document.getElementById("endYear").value);
+    if (isNaN(startYear) || startYear < 1980 || startYear > 2050) errors.push("Start year is invalid.");
+    if (isNaN(endYear) || endYear < 1980 || endYear > 2050) errors.push("End year is invalid.");
+    if (!isNaN(startYear) && !isNaN(endYear) && startYear > endYear) errors.push("Start year cannot be after end year.");
+  }
+
+
+  if (!dataSource) {
+    errors.push("Please select a data source.");
+  }
+
+  // GTI / Tilt Angle Validation
+  const gtiChecked = document.getElementById("gti")?.checked;
+  if (gtiChecked) {
+    const tiltAngle = parseFloat(document.getElementById("tiltangle").value);
+    if (isNaN(tiltAngle) || tiltAngle < -90 || tiltAngle > 90) {
+      errors.push("Tilt angle must be a number between -90 and 90 when GTI is selected.");
+    }
+  }
+
+
+  if (errors.length > 0) {
+    return { valid: false, message: errors.join("\n") };
+  }
+  return { valid: true, message: "" };
+}
+
+function validateAndToggleButton() {
+  const { valid, message } = validateInputs();
+  const visualizeBtn = document.getElementById("visualizeBtn");
+  const downloadBtn = document.getElementById("downloadBtn");
+
+  visualizeBtn.disabled = !valid;
+  downloadBtn.disabled = !valid;
+
+  // Optional: Display errors in a dedicated UI element instead of just disabling buttons
+  const errorDisplayElement = document.getElementById("formErrorDisplay"); // Assuming you add such an element
+  if (errorDisplayElement) {
+    errorDisplayElement.textContent = valid ? "" : message;
+    errorDisplayElement.style.display = valid ? "none" : "block";
+  }
+}
+
+
+function getFormData() {
+  return {
+    latitude: parseFloat(document.getElementById("latitudeInput").value),
+    longitude: parseFloat(document.getElementById("longitudeInput").value),
+    startDate: document.getElementById("startDate").value,
+    endDate: document.getElementById("endDate").value,
+    timeGranularity:
+      document.querySelector(
+        'input[name="Temporal Resolution"]:checked',
+      )?.value || "Daily",
+    dataSource: document.getElementById("dataSource").value,
+    mode: document.querySelector('input[name="timeRangeType"]:checked').value,
+    tiltAngle: document.getElementById("tiltangle").value, // Ensure this is collected
+    gti: document.getElementById("gti")?.checked || false, // Collect GTI checkbox state
+    startyear: document.getElementById("startYear").value,
+    endyear: document.getElementById("endYear").value,
+  };
+}
+
 document.addEventListener("DOMContentLoaded", () => {
   const modeRadios = document.querySelectorAll('input[name="timeRangeType"]');
   const dateFields = document.getElementById("dateRangeFields");
   const yearFields = document.getElementById("yearRangeFields");
+  const resolutionbuttons = document.getElementById("resolutionbtns");
+
 
   function updateSelectionMode() {
     const selectedRadio = document.querySelector(
       'input[name="timeRangeType"]:checked',
     );
-
-    const resolutionbuttons = document.getElementById("resolutionbtns");
-
-    if (!selectedRadio) {
-      console.error("No time range type radio button is checked!");
-      return;
-    }
-
+    if (!selectedRadio) return;
     const selectedMode = selectedRadio.value;
 
-    if (selectedMode === "date") {
-      dateFields.style.display = "";
-      yearFields.style.display = "none";
-      resolutionbuttons.style.display = "";
-    } else {
-      dateFields.style.display = "none";
-      yearFields.style.display = "";
-      resolutionbuttons.style.display = "none";
+    dateFields.style.display = selectedMode === "date" ? "" : "none";
+    yearFields.style.display = selectedMode === "year" ? "" : "none";
+    if (resolutionbuttons) { // Check if element exists
+      resolutionbuttons.style.display = selectedMode === "date" ? "" : "none";
     }
+    validateAndToggleButton(); // Re-validate when mode changes
   }
 
   modeRadios.forEach((radio) => {
     radio.addEventListener("change", updateSelectionMode);
   });
-  updateSelectionMode();
+  updateSelectionMode(); // Initial call
 });
 
-
-// --- Corrected avgChart function ---
+// --- avgChart function (for mode === 'year') ---
+// This function might also need modification if NASA/CAMS provide
+// yearly average data for DHI/DNI that you want to plot.
+// For now, it's assumed to plot a single mean (likely GHI).
 function avgChart(meanData, upper, lower, date_labels) {
   const ctx = document.getElementById("irradianceChart").getContext("2d");
 
-  // Destroy previous chart instance if it exists
   if (irradianceChart) {
     irradianceChart.destroy();
   }
 
-  // --- Build datasets ---
   const data = {
-    labels: date_labels, 
+    labels: date_labels,
     datasets: [
       {
-        // invisible lower boundary
+        label: 'Lower Bound', // For tooltip clarity
         data: lower,
-        fill: false, 
-        pointRadius: 0,
-        borderWidth: 1, 
-      },
-      {
-        // shaded area (Range)
-        data: upper,
-        fill: "-1", 
-        backgroundColor: "rgba(186, 185, 245, 0.5)", 
-        pointRadius: 0,
+        borderColor: 'rgba(186, 185, 245, 0.5)', // Make it visible but subtle
         borderWidth: 1,
+        pointRadius: 0,
+        fill: false,
+        borderDash: [5, 5], // Dashed line for bounds
       },
       {
-        // mean line
-        label: "Mean GHI",
+        label: 'Upper Bound', // For tooltip clarity
+        data: upper,
+        borderColor: 'rgba(186, 185, 245, 0.5)', // Make it visible but subtle
+        backgroundColor: "rgba(186, 185, 245, 0.2)", // Light fill for the range
+        fill: "-1", // Fill to the previous dataset (lower bound)
+        borderWidth: 1,
+        pointRadius: 0,
+        borderDash: [5, 5], // Dashed line for bounds
+      },
+      {
+        label: "Mean GHI (W/m²)", // Assuming this is GHI mean
         data: meanData,
         borderColor: "rgba(19,18,254,1)",
-        borderWidth: 3, 
+        borderWidth: 2,
         pointRadius: 1,
         fill: false,
-        tension: 0.2, 
-        order: 2
+        tension: 0.2,
       },
     ],
   };
 
-  // --- 4. Config & render ---
-  irradianceChart = new Chart(ctx, { 
+  irradianceChart = new Chart(ctx, {
     type: "line",
-    data: data, 
+    data: data,
     options: {
       responsive: true,
-      maintainAspectRatio: false, 
+      maintainAspectRatio: false,
       scales: {
         x: {
-          type: "category", 
-          title: { display: true, text: "Date" },
+          type: "category", // Assuming date_labels are categories like 'Jan', 'Feb'
+          title: { display: true, text: "Month" }, // Or "Date" if full dates
         },
         y: {
           title: { display: true, text: "GHI (W/m²)" },
-          suggestedMin: 0,
+          beginAtZero: true,
         },
       },
       plugins: {
-        legend: { position: "top" },
+        legend: { position: "top", display: true },
         tooltip: {
-            mode: 'index', 
-            intersect: false,
+          mode: 'index',
+          intersect: false,
+        },
+        title: {
+          display: false // No "No data" message needed here usually
         }
       },
       interaction: { mode: "index", intersect: false },
