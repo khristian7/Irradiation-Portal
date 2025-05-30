@@ -5,32 +5,38 @@ import numpy as np
 import csv
 import io
 import json
-from model import SolarIrradianceCalculator 
+from model import SolarIrradianceCalculator
 import traceback
 from geopy import Point
 
 
-from NASA import NASAPowerFetchData, NASAPowerProducts, TemporalResolution 
-from CAMS import get_cams_data 
+from NASA import NASAPowerFetchData, NASAPowerProducts, TemporalResolution
+from CAMS import get_cams_data
+from rf_model import GHIPredictor
 import os
 
 app = Flask(__name__)
+
 
 @app.route('/')
 def home():
     return render_template('home.html', datetime=datetime)
 
+
 @app.route('/portal')
 def index():
     return render_template('portal.html', current_date=datetime.now().strftime("%Y-%m-%d"))
+
 
 @app.route('/documentation')
 def documentation():
     return render_template('documentation.html')
 
+
 @app.route('/help')
 def help():
     return render_template('help.html')
+
 
 @app.route('/api/model', methods=['POST'])
 def fetch_model_data():
@@ -45,7 +51,7 @@ def fetch_model_data():
 
     if latitude is None or longitude is None:
         return jsonify({"error": "Missing latitude or longitude"}), 400
-    
+
     try:
         latitude = float(latitude)
         longitude = float(longitude)
@@ -70,30 +76,35 @@ def fetch_model_data():
             return jsonify({"error": "Invalid year format"}), 400
 
         start_date_str = f"{start_year}-01-01"
-        end_date_str   = f"{end_year}-12-31"
-        
+        end_date_str = f"{end_year}-12-31"
+
         try:
             start_date = datetime.strptime(start_date_str, "%Y-%m-%d")
             end_date = datetime.strptime(end_date_str, "%Y-%m-%d")
         except ValueError:
             return jsonify({"error": "Internal error generating dates from years"}), 500
-        
-        model = SolarIrradianceCalculator(latitude, longitude, start_date) # start_date might not be used by constructor
-        hourly_series = model.generate_hourly_series(start_date, end_date) # Pass actual start_date
+
+        # start_date might not be used by constructor
+        model = SolarIrradianceCalculator(latitude, longitude, start_date)
+        hourly_series = model.generate_hourly_series(
+            start_date, end_date)  # Pass actual start_date
 
         # Assuming meanGHI returns a list of dicts with 'datetime', 'mean', 'upper', 'lower'
         # And 'datetime' is already a string or datetime object that avgChart can handle (e.g., month name)
-        raw_stats = model.meanGHI(pd.DataFrame(hourly_series), resample='D') # Or 'M' if that's what frontend expects for year mode labels
+        # Or 'M' if that's what frontend expects for year mode labels
+        raw_stats = model.meanGHI(pd.DataFrame(hourly_series), resample='D')
 
-        stats_list = pd.DataFrame(raw_stats).replace({np.nan: None}).to_dict(orient='records')
-        
+        stats_list = pd.DataFrame(raw_stats).replace(
+            {np.nan: None}).to_dict(orient='records')
+
         return jsonify({
             "latitude":   latitude,
             "longitude":  longitude,
-            "start_date": start_date_str, # For consistency, though start/end year were inputs
+            "start_date": start_date_str,  # For consistency, though start/end year were inputs
             "end_date":   end_date_str,
             "num_points": len(stats_list),
-            "data":       stats_list, # Expected by avgChart: [{datetime (label), mean, upper, lower}, ...]
+            # Expected by avgChart: [{datetime (label), mean, upper, lower}, ...]
+            "data":       stats_list,
         })
 
     elif mode == 'date':
@@ -103,7 +114,7 @@ def fetch_model_data():
 
         if not start_date_str or not end_date_str:
             return jsonify({"error": "Invalid or missing start/end date for 'date' mode"}), 400
-       
+
         try:
             start_date = datetime.strptime(start_date_str, "%Y-%m-%d")
             end_date = datetime.strptime(end_date_str, "%Y-%m-%d")
@@ -111,17 +122,18 @@ def fetch_model_data():
                 return jsonify({"error": "End date cannot be before start date"}), 400
         except ValueError:
             return jsonify({"error": "Dates must be in YYYY-MM-DD format"}), 400
-       
-        model = SolarIrradianceCalculator(latitude, longitude, start_date) # start_date might not be used by constructor       
+
+        # start_date might not be used by constructor
+        model = SolarIrradianceCalculator(latitude, longitude, start_date)
         hourly_series = model.generate_hourly_series(start_date, end_date)
-        
+
         results = []
         if time_granularity == 'Hourly':
-            series_to_process = hourly_series # Already hourly
+            series_to_process = hourly_series  # Already hourly
             for h in series_to_process:
                 results.append({
                     "datetime": h['datetime'].isoformat() if isinstance(h['datetime'], datetime) else h['datetime'],
-                    "GHI": h.get('irradiance'), # Use .get for safety
+                    "GHI": h.get('irradiance'),  # Use .get for safety
                     "DHI": None,
                     "DNI": None
                 })
@@ -138,7 +150,8 @@ def fetch_model_data():
             monthly_series = model.resample_monthly(hourly_series)
             for m in monthly_series:
                 # Construct a datetime object for the first day of the month
-                month_dt = datetime(int(m['year']), int(m['month']), 1, tzinfo=timezone.utc)
+                month_dt = datetime(int(m['year']), int(
+                    m['month']), 1, tzinfo=timezone.utc)
                 results.append({
                     "datetime": month_dt.isoformat(),
                     "GHI": m.get('irradiance'),
@@ -155,7 +168,8 @@ def fetch_model_data():
             "end_date": end_date_str,
             "time_granularity": time_granularity,
             "num_points": len(results),
-            "data": results, # Standardized data: [{"datetime":..., "GHI":..., "DHI":null, "DNI":null}, ...]
+            # Standardized data: [{"datetime":..., "GHI":..., "DHI":null, "DNI":null}, ...]
+            "data": results,
         })
     else:
         return jsonify({"error": "Invalid mode selected"}), 400
@@ -168,12 +182,13 @@ def handle_cams_request():
         request_data = request.get_json()
         if not request_data:
             return jsonify({"error": "Invalid JSON payload"}), 400
-        
-        required_fields = ['latitude', 'longitude', 'startDate', 'endDate', 'mode']
+
+        required_fields = ['latitude', 'longitude',
+                           'startDate', 'endDate', 'mode']
         for field in required_fields:
             if field not in request_data:
                 return jsonify({"error": f"Missing required field: {field}"}), 400
-        
+
         # CAMS typically provides time series, so 'mode' should usually be 'date'
         if request_data['mode'] != 'date':
             return jsonify({"error": "CAMS API currently only supports 'date' mode for time series."}), 400
@@ -181,26 +196,24 @@ def handle_cams_request():
         params = {
             'latitude': float(request_data['latitude']),
             'longitude': float(request_data['longitude']),
-            'start_date': request_data['startDate'], # Expected YYYY-MM-DD
-            'end_date': request_data['endDate'],     # Expected YYYY-MM-DD
-            'time_step': request_data.get('timeGranularity', 'Hourly'), # Map timeGranularity to CAMS time_step if different
-             # CAMS API might expect '1h', '1d', '1m'. Adjust if your get_cams_data expects different.
-            'email': os.getenv('CAMS_EMAIL', 'default@example.com') 
+            'start_date': request_data['startDate'],
+            'end_date': request_data['endDate'],
+            'time_step': request_data.get('timeGranularity', 'Hourly'),
+            'email': os.getenv('CAMS_EMAIL', 'default@example.com')
         }
-        
+
         # Map frontend timeGranularity to CAMS expected time_step if necessary
-        # Example: if CAMS expects '1h', '1d', '1M'
         cams_time_step_map = {
             "Hourly": "1h",
-            "Daily": "1d", # Or "day" depending on CAMS wrapper
-            "Monthly": "1m" # Or "month"
+            "Daily": "1d",
+            "Monthly": "1M"
         }
-        params['time_step'] = cams_time_step_map.get(request_data.get('timeGranularity', 'Hourly'), '1h')
-
+        params['time_step'] = cams_time_step_map.get(
+            request_data.get('timeGranularity', 'Hourly'), '1h')
 
         if not (-90 <= params['latitude'] <= 90) or not (-180 <= params['longitude'] <= 180):
             return jsonify({"error": "Invalid coordinates"}), 400
-        
+
         # Validate dates
         datetime.strptime(params['start_date'], "%Y-%m-%d")
         datetime.strptime(params['end_date'], "%Y-%m-%d")
@@ -214,13 +227,14 @@ def handle_cams_request():
             return jsonify({"error": f"CAMS API Error: {cams_result['error']}"}), 500
 
         if not cams_result.get('data') or not isinstance(cams_result['data'], list):
-             return jsonify({"error": "CAMS API returned no data or invalid data format"}), 500
+            return jsonify({"error": "CAMS API returned no data or invalid data format"}), 500
 
         # Standardize the output for the frontend
         formatted_data = []
         for item in cams_result['data']:
             formatted_data.append({
-                "datetime": item.get('timestamp'), # Assuming CAMS 'timestamp' is ISO string
+                # Assuming CAMS 'timestamp' is ISO string
+                "datetime": item.get('timestamp'),
                 "GHI": item.get('ghi'),
                 "DHI": item.get('dhi'),
                 "DNI": item.get('dni')
@@ -233,16 +247,17 @@ def handle_cams_request():
             "end_date": params['end_date'],
             "time_granularity": request_data.get('timeGranularity', 'Hourly'),
             "num_points": len(formatted_data),
-            "data": formatted_data, # Standardized data
-            "metadata_cams": cams_result.get('metadata') # Optional: pass along CAMS specific metadata
+            "data": formatted_data,  # Standardized data
+            # Optional: pass along CAMS specific metadata
+            "metadata_cams": cams_result.get('metadata')
         })
 
     except ValueError as e:
         return jsonify({"error": f"Invalid parameter format: {str(e)}"}), 400
     except Exception as e:
-        app.logger.error(f"CAMS API request error: {str(e)}\n{traceback.format_exc()}")
+        app.logger.error(f"CAMS API request error: {
+                         str(e)}\n{traceback.format_exc()}")
         return jsonify({"error": f"Server error processing CAMS request: {str(e)}"}), 500
-
 
 
 @app.route('/api/nasa', methods=['POST'])
@@ -254,8 +269,9 @@ def handle_nasa_request():
         request_data = request.get_json()
         if not request_data:
             return jsonify({"error": "Invalid JSON payload"}), 400
-        
-        required_fields = ['latitude', 'longitude', 'startDate', 'endDate', 'mode']
+
+        required_fields = ['latitude', 'longitude',
+                           'startDate', 'endDate', 'mode']
         for field in required_fields:
             if field not in request_data:
                 return jsonify({"error": f"Missing required field: {field}"}), 400
@@ -266,12 +282,12 @@ def handle_nasa_request():
 
         start_date_str = request_data['startDate']
         end_date_str = request_data['endDate']
-        
+
         try:
             start_date = datetime.strptime(start_date_str, "%Y-%m-%d")
             end_date = datetime.strptime(end_date_str, "%Y-%m-%d")
             if end_date < start_date:
-                 return jsonify({"error": "End date cannot be before start date"}), 400
+                return jsonify({"error": "End date cannot be before start date"}), 400
         except ValueError:
             return jsonify({"error": "Dates must be in YYYY-MM-DD format"}), 400
 
@@ -286,37 +302,34 @@ def handle_nasa_request():
         nasa_temporal_resolution_map = {
             "Hourly": TemporalResolution.HOURLY,
             "Daily": TemporalResolution.DAILY,
-            "Monthly": TemporalResolution.MONTHLY 
-            # Ensure your NASAPowerFetchData and TemporalResolution enum support these
+            "Monthly": TemporalResolution.MONTHLY
         }
-        time_granularity_frontend = request_data.get('timeGranularity', 'Hourly')
-        nasa_temporal_res = nasa_temporal_resolution_map.get(time_granularity_frontend)
-        
+        time_granularity_frontend = request_data.get(
+            'timeGranularity', 'Hourly')
+        nasa_temporal_res = nasa_temporal_resolution_map.get(
+            time_granularity_frontend)
+
         if not nasa_temporal_res:
             return jsonify({"error": f"Unsupported timeGranularity for NASA: {time_granularity_frontend}"}), 400
-       
+
         nasa_data_fetcher = NASAPowerFetchData()
-        
+
         # Fetch GHI, DHI, DNI. NASAPowerProducts should map to API parameter names.
         nasa_api_result = nasa_data_fetcher.fetch_multiple_parameters(
             temporal_resolution=nasa_temporal_res,
-            start_date=start_date, # Pass datetime objects
+            start_date=start_date,  # Pass datetime objects
             end_date=end_date,     # Pass datetime objects
             location=location,
             products=[
-                NASAPowerProducts.GHI, 
-                NASAPowerProducts.DHI, 
+                NASAPowerProducts.GHI,
+                NASAPowerProducts.DHI,
                 NASAPowerProducts.DNI
             ]
         )
-        
-        # Assuming nasa_api_result is a dictionary of pandas Series, e.g.,
-        # { 'ALLSKY_SFC_SW_DWN': pd.Series, 'ALLSKY_SFC_SW_DIFF': pd.Series, ... }
-        # where Series index is pandas Timestamps or datetime-like strings.
 
         # Create a DataFrame from the Series dictionary
         df = pd.DataFrame(nasa_api_result)
-        
+
         # Rename columns to GHI, DHI, DNI based on NASAPowerProducts mapping if necessary
         column_mapping = {
             NASAPowerProducts.GHI.value if hasattr(NASAPowerProducts.GHI, 'value') else 'ALLSKY_SFC_SW_DWN': 'GHI',
@@ -326,52 +339,36 @@ def handle_nasa_request():
         df.rename(columns=column_mapping, inplace=True)
 
         # Handle missing data (NASA uses -999)
-        df.replace({-999.0: None, -999: None}, inplace=True) # Replace with None (becomes null in JSON)
-        
-        # Reset index to make datetime a column
-        df.index.name = 'datetime_pd' # Name the index before resetting
-        df.reset_index(inplace=True)
-        
-        # --- FIX: Convert 'datetime_pd' column to pandas Timestamps before further processing ---
-        # This ensures that the elements are Timestamps, not strings.
-        # The format of the datetime strings from NASA POWER API needs to be known.
-        # Common formats are like 'YYYYMMDDHH' for hourly, 'YYYYMMDD' for daily.
-        # If `nasa_api_result` index is already proper Timestamps, this pd.to_datetime might be redundant
-        # but it's safer to ensure conversion if it might be strings.
-        # If NASAPowerFetchData already ensures its index is datetime, this specific line might not be needed
-        # or might need adjustment based on the actual string format in df.index if it's not auto-parsed.
-        try:
-            df['datetime_pd'] = pd.to_datetime(df['datetime_pd']) # Attempt automatic parsing
-        except Exception as e:
-            # If automatic parsing fails, you might need to specify the format if it's consistent
-            # For example, if NASA hourly is 'YYYYMMDDHH':
-            # try:
-            #    df['datetime_pd'] = pd.to_datetime(df['datetime_pd'], format='%Y%m%d%H')
-            # except Exception as e_fmt:
-            #    app.logger.error(f"Error converting NASA datetime strings with specific format: {e_fmt}")
-            #    return jsonify({"error": "Could not parse datetime from NASA data source."}), 500
-            app.logger.error(f"Error converting NASA datetime strings to Timestamp objects: {e}")
-            # It's possible the index was already datetime objects, in which case this error might not occur,
-            # but the original error implies it was string.
-            # If this conversion itself fails, it means the strings in `datetime_pd` are not recognized by pd.to_datetime.
+        # Replace with None (becomes null in JSON)
+        df.replace({-999.0: None, -999: None}, inplace=True)
 
+        # Reset index to make datetime a column
+        df.index.name = 'datetime_pd'  # Name the index before resetting
+        df.reset_index(inplace=True)
+
+        try:
+            df['datetime_pd'] = pd.to_datetime(
+                df['datetime_pd'])  # Attempt automatic parsing
+        except Exception as e:
+            app.logger.error(
+                f"Error converting NASA datetime strings to Timestamp objects: {e}")
 
         # Convert pandas Timestamp to ISO 8601 string
         # Now that df['datetime_pd'] should contain Timestamp objects, this should work.
-        df['datetime'] = df['datetime_pd'].apply(lambda x: pd.to_datetime(x,  format='%Y%m%d%H').isoformat() if pd.notnull(x) else None)
+        df['datetime'] = df['datetime_pd'].apply(lambda x: pd.to_datetime(
+            x,  format='%Y%m%d%H').isoformat() if pd.notnull(x) else None)
 
         # Select only the required columns for the final output
         output_columns = ['datetime', 'GHI', 'DHI', 'DNI']
         # Filter out columns not present in the DataFrame (e.g., if DNI wasn't fetched or available)
         final_columns = [col for col in output_columns if col in df.columns]
-        
+
         # Ensure GHI, DHI, DNI columns exist, if not, add them with None
         for col in ['GHI', 'DHI', 'DNI']:
             if col not in df.columns:
                 df[col] = None
-                if col not in final_columns : 
-                     final_columns.append(col)
-
+                if col not in final_columns:
+                    final_columns.append(col)
 
         formatted_data = df[final_columns].to_dict(orient='records')
 
@@ -382,19 +379,28 @@ def handle_nasa_request():
             "start_date": start_date_str,
             "end_date":   end_date_str,
             "num_points": len(formatted_data),
-            "data":       formatted_data, 
+            "data":       formatted_data,
         })
 
     except ValueError as e:
         return jsonify({"error": f"Invalid parameter format: {str(e)}"}), 400
-    except AttributeError as e_attr: # Catch attribute errors specifically if needed
-        app.logger.error(f"NASA API request AttributeError: {str(e_attr)}\n{traceback.format_exc()}")
+    except AttributeError as e_attr:  # Catch attribute errors specifically if needed
+        app.logger.error(f"NASA API request AttributeError: {
+                         str(e_attr)}\n{traceback.format_exc()}")
         return jsonify({"error": f"Data processing error for NASA data: {str(e_attr)}"}), 500
     except Exception as e:
-        app.logger.error(f"NASA API request error: {str(e)}\n{traceback.format_exc()}")
+        app.logger.error(f"NASA API request error: {
+                         str(e)}\n{traceback.format_exc()}")
         return jsonify({"error": f"Server error processing NASA request: {str(e)}"}), 500
 
 
+# @app.route('/api/rf', method=['POST'])
+# def run_rf():
+#     """
+#     Runs Random Forest model
+#     """
+#     pass
+#
 
 @app.route('/api/export', methods=['POST'])
 def export_data():
@@ -405,10 +411,10 @@ def export_data():
 
         if not request_data:
             return jsonify({"error": "Invalid JSON payload for export"}), 400
-        
+
         if format_type not in ['CSV', 'JSON']:
             return jsonify({"error": "Unsupported format for export"}), 400
-        
+
         # Reuse the data fetching logic based on dataSource
         # This requires dataSource to be part of the request_data for export
         data_source = request_data.get('dataSource')
@@ -433,14 +439,13 @@ def export_data():
             # or call a refactored internal function.
             # For this example, we'll just show the structure.
             # This is a placeholder for actual data retrieval logic.
-             return jsonify({"error": "Export for 'model' data needs refactoring to reuse data fetching logic."}), 500
-
+            return jsonify({"error": "Export for 'model' data needs refactoring to reuse data fetching logic."}), 500
 
         elif data_source == "CAMS_RAD":
             # Placeholder - replicate CAMS data fetching logic or call refactored function
             # For now, assume `handle_cams_request` could be refactored to return data internally
             return jsonify({"error": "Export for 'CAMS_RAD' data needs refactoring."}), 500
-            
+
         elif data_source == "NASA":
             # Placeholder - replicate NASA data fetching logic or call refactored function
             return jsonify({"error": "Export for 'NASA' data needs refactoring."}), 500
@@ -459,22 +464,22 @@ def export_data():
 
         # For demonstration, let's create dummy api_data_points if the above isn't implemented
         # REMOVE THIS DUMMY DATA ONCE ACTUAL FETCHING IS IN PLACE FOR EXPORT
-        if 'api_data_points' not in locals(): # Check if it was populated by (currently missing) logic
+        if 'api_data_points' not in locals():  # Check if it was populated by (currently missing) logic
             # This is a fallback if the above data source logic isn't filled yet for export
             # You should replace this with actual data fetching based on dataSource
             # For example, by calling the refactored data fetching functions.
             # This is just to make the export function runnable with dummy data.
-            if request_data.get("mode") == "date": # Only proceed if it's date mode for this dummy
-                 api_data_points = [{
+            # Only proceed if it's date mode for this dummy
+            if request_data.get("mode") == "date":
+                api_data_points = [{
                     "datetime": datetime.now(timezone.utc).isoformat(),
                     "GHI": 100, "DHI": 50, "DNI": 800
                 }]
-            else: # Year mode export would also need its specific data structure
+            else:  # Year mode export would also need its specific data structure
                 return jsonify({"error": "Export logic for 'year' mode data structure not shown in this dummy example."}), 500
 
-
         if not api_data_points:
-             return jsonify({"error": "No data to export or data fetching for export failed"}), 500
+            return jsonify({"error": "No data to export or data fetching for export failed"}), 500
 
         # Prepare export data (flattened for CSV)
         export_list = []
@@ -485,10 +490,10 @@ def export_data():
                 "DHI (W/m²)": entry.get('DHI'),
                 "DNI (W/m²)": entry.get('DNI')
             })
-        
+
         if not export_list:
             return jsonify({"error": "No valid data could be prepared for export"}), 500
-        
+
         # Generate CSV or JSON
         timestamp_str = datetime.now().strftime('%Y%m%d_%H%M%S')
         filename_base = f"solar_data_{data_source}_{timestamp_str}"
@@ -497,10 +502,11 @@ def export_data():
             output = io.StringIO()
             # Use the keys from the first item as headers, ensures correct order and all keys
             if export_list:
-                writer = csv.DictWriter(output, fieldnames=export_list[0].keys())
+                writer = csv.DictWriter(
+                    output, fieldnames=export_list[0].keys())
                 writer.writeheader()
                 writer.writerows(export_list)
-            
+
             return send_file(
                 io.BytesIO(output.getvalue().encode('utf-8')),
                 mimetype='text/csv',
@@ -509,16 +515,19 @@ def export_data():
             )
         else:  # JSON
             return send_file(
-                io.BytesIO(json.dumps(api_data_points, indent=2).encode('utf-8')), # Export original structure for JSON
+                io.BytesIO(json.dumps(api_data_points, indent=2).encode(
+                    'utf-8')),  # Export original structure for JSON
                 mimetype='application/json',
                 as_attachment=True,
                 download_name=f"{filename_base}.json"
             )
-    
+
     except Exception as e:
-        app.logger.error(f"Error in export: {str(e)}\n{traceback.format_exc()}")
+        app.logger.error(f"Error in export: {str(e)}\n{
+                         traceback.format_exc()}")
         return jsonify({"error": f"An unexpected error occurred during export: {str(e)}"}), 500
 
 
 if __name__ == '__main__':
+    app.run(debug=True)
     app.run(debug=True)

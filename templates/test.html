@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Calcite Select Example</title>
+  <!-- Include Calcite Components -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/choices.js/public/assets/styles/choices.min.css" />
+<script src="https://cdn.jsdelivr.net/npm/choices.js/public/assets/scripts/choices.min.js"></script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+</head>
+
+<body>
+
+<label for="fruits">Select fruits:</label>
+<select id="fruits" name="fruits" multiple>
+  <option value="apple">Apple</option>
+  <option value="banana">Banana</option>
+  <option value="orange">Orange</option>
+  <option value="grape">Grape</option>
+</select>
+
+<br><br>
+
+
+
+<input type="text" id="startYear" placeholder="Start Year">
+<input type="text" id="endYear" placeholder="End Year">
+
+
+</body>
+<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+
+<script>
+  const element = document.getElementById('fruits');
+  const choices = new Choices(element, {
+    removeItemButton: true,
+    placeholder: true,
+    placeholderValue: 'Select fruits',
+    duplicateItemsAllowed: false,
+  });
+</script>
+</html>

@@ -1,0 +1,688 @@
+<!doctype html>
+<html lang="en" data-bs-theme="dark">
+
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Irradiation Portal</title>
+  <link rel="icon" href="/static/favicon/favicon.svg" type="image/svg+xml">
+
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/choices.js/public/assets/styles/choices.min.css" /> 
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" />
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+    integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css" />
+ <link rel="stylesheet" href="/static/css/styles.css" />
+ 
+
+  <!-- Custom styles for this template -->
+  <style>
+  body {
+      display: flex;
+      flex-direction: column;
+      min-height: 100vh;
+      overflow: hidden;
+    }
+
+    .top-navbar {
+      flex-shrink: 0;
+    }
+
+    .main-wrapper {
+      display: flex;
+      flex-grow: 1;
+      overflow: hidden;
+    }
+
+    .primary-sidebar {
+      width: 220px;
+      flex-shrink: 0;
+      background-color: var(--bs-dark);
+      padding: 1rem;
+      overflow-y: auto;
+      border-right: 1px solid var(--bs-border-color);
+      transition: width 0.3s ease;
+    }
+    
+    .primary-sidebar.collapsed {
+        width: 70px;
+    }
+    
+    .primary-sidebar.collapsed .sidebar-nav .nav-link span,
+    .primary-sidebar.collapsed .sidebar-section-title,
+    .primary-sidebar.collapsed .sidebar-user-info .user-name,
+    .primary-sidebar.collapsed .sidebar-user-info .user-role {
+        display: none;
+    }
+    
+    .primary-sidebar.collapsed .sidebar-nav .nav-link i {
+        margin-right: 0;
+        font-size: 1.2rem;
+    }
+    
+    .primary-sidebar.collapsed #collapseSidebarBtn i {
+        transform: rotate(180deg);
+    }
+
+    .secondary-config-panel {
+      width: 350px;
+      flex-shrink: 0;
+      background-color: #2a2f34;
+      padding: 1.5rem 1rem;
+      overflow-y: auto;
+      border-right: 1px solid var(--bs-border-color);
+      transition: width 0.3s ease, opacity 0.3s ease, transform 0.3s ease;
+      transform: translateX(-100%);
+      opacity: 0;
+      display: none;
+    }
+
+    .secondary-config-panel.visible {
+      transform: translateX(0%);
+      opacity: 1;
+      display: block;
+    }
+    
+    .secondary-config-panel .card {
+        background-color: transparent !important;
+        border: none !important;
+    }
+
+    .map-main-area {
+      flex-grow: 1;
+      display: flex;
+      flex-direction: column;
+      position: relative;
+    }
+
+    #map {
+      flex-grow: 1;
+      width: 100%;
+      background-color: #1a1a1a;
+    }
+
+    .map-controls-overlay {
+        position: absolute; 
+        top: 10px; 
+        right: 10px; 
+        z-index: 1000;
+        background: rgba(var(--bs-dark-rgb), 0.8); 
+        padding: 0.5rem; 
+        border-radius: 0.25rem;
+    }
+    
+    .map-coords-display {
+        position: absolute; 
+        bottom: 10px; 
+        right: 10px; 
+        z-index: 1000;
+        background: rgba(var(--bs-dark-rgb), 0.75); 
+        color: var(--bs-light);
+        padding: 5px 10px; 
+        border-radius: 3px; 
+        font-size: 0.9em;
+    }
+
+    .sidebar-nav .nav-link {
+        color: var(--bs-gray-400); 
+        padding: 0.65rem 1rem; 
+        margin-bottom: 0.25rem;
+        border-left: 3px solid transparent; 
+        display: flex; 
+        align-items: center;
+    }
+    
+    .sidebar-nav .nav-link:hover, 
+    .sidebar-nav .nav-link.active {
+        color: var(--bs-light); 
+        background-color: rgba(var(--bs-primary-rgb), 0.1);
+        border-left-color: var(--bs-primary);
+    }
+    
+    .sidebar-nav .nav-link i { 
+        margin-right: 0.85rem; 
+        font-size: 1.1rem; 
+        width: 20px; 
+        text-align: center;
+    }
+    
+    .sidebar-section-title {
+        font-size: 0.8rem; 
+        color: var(--bs-gray-500); 
+        text-transform: uppercase;
+        margin-top: 1.25rem; 
+        margin-bottom: 0.75rem; 
+        padding: 0 1rem;
+    }
+    
+    #configPanelCloseBtn {
+        margin-bottom: 1rem;
+    }
+
+  </style>
+</head>
+
+<body>
+  <nav class="navbar navbar-expand-lg navbar-dark bg-primary shadow-sm top-navbar">
+    <div class="container-fluid">
+      <a class="navbar-brand d-flex align-items-center" href="{{ url_for('home') }}">
+        <i class="bi bi-sun fs-4 me-2"></i>
+        <span class="h5 mb-0 text-white">Irradiation Portal</span>
+      </a>
+      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+        </div>
+  </nav>
+
+  <div class="main-wrapper">
+    <aside class="primary-sidebar" id="primarySidebar">
+      <nav class="nav flex-column sidebar-nav"> 
+        <div class="sidebar-section-title">Actions</div>
+        <a class="nav-link" href="#" id="visualizeConfigLink"><i class="bi bi-bar-chart-line"></i> <span>Visualize</span></a>
+        <a class="nav-link" href="#" id="downloadConfigLink"><i class="bi bi-download"></i> <span>Download</span></a>
+        <a class="nav-link" href="#"><i class="bi bi-file-earmark-text"></i> <span>Reports</span></a>
+        
+        <div class="sidebar-section-title">Configuration & Help</div>
+        <a class="nav-link" href="{{ url_for('documentation') }}"><i class="bi bi-file-text-fill"></i> <span>Documentation</span></a>
+        <a class="nav-link" href="{{ url_for('help') }}"><i class="bi bi-question-circle"></i> <span>Tutorial/Help</span></a>
+      </nav>
+      <div class="mt-auto p-2 text-center">
+        <button class="btn btn-sm btn-outline-secondary w-100" id="collapseSidebarBtn">
+          <i class="bi bi-chevron-double-left"></i> <span>Collapse</span>
+        </button>
+      </div>
+    </aside>
+<!------------------------------------------ Visulise Section ------------------------------->
+<aside class="secondary-config-panel" id="visualizeConfigPanel">
+  <div class="mb-3">
+    <div class="btn-group btn-group-sm w-100" role="group" aria-label="Time">
+      <input type="radio" class="btn-check" name="visualizeTimeRangeType" value="date" id="visualizeDate" autocomplete="off" checked>
+      <label class="btn btn-outline-secondary" for="visualizeDate">Date Range</label>
+      <input type="radio" class="btn-check" name="visualizeTimeRangeType" value="year" id="visualizeYear" autocomplete="off">
+      <label class="btn btn-outline-secondary" for="visualizeYear">Year Range</label>
+    </div>
+    <div id="visualizeDateRangeFields" class="mt-2">
+      <div class="input-group input-group-sm mb-2">
+        <input type="text" class="form-control datepicker" id="visualizeStartDate" placeholder="Start Date" />
+        <span class="input-group-text"><i class="bi bi-calendar"></i></span>
+      </div>
+      <div class="input-group input-group-sm">
+        <input type="text" class="form-control datepicker" id="visualizeEndDate" placeholder="End Date" />
+        <span class="input-group-text"><i class="bi bi-calendar"></i></span>
+      </div>
+    </div>
+    <div id="visualizeYearRangeFields" style="display: none;" class="mt-2">
+      <div class="form-floating mb-2">
+        <input class="form-control form-control-sm" type="number" id="visualizeStartYear" name="visualizeStartYear" min="2000" max="2050" value="2020" placeholder=" ">
+        <label for="visualizeStartYear">Start Year</label>
+      </div>
+      <div class="form-floating">
+        <input class="form-control form-control-sm" type="number" id="visualizeEndYear" name="visualizeEndYear" min="2000" max="2050" step="1" placeholder=" ">
+        <label for="visualizeEndYear">End Year</label>
+      </div>
+    </div>
+  </div>
+   <div class="mb-3">
+      <label class="form-label fw-bold small">Location (from map click)</label>
+      <div class="input-group input-group-sm mb-2">
+           <span class="input-group-text"><i class="bi bi-geo-alt"></i></span>
+          <input type="number" step="any" class="form-control" id="visualizeLongitudeInputSidebar" placeholder="Longitude" min="-180" max="180" required readonly />
+      </div>
+       <div class="input-group input-group-sm">
+          <span class="input-group-text"><i class="bi bi-geo-alt-fill"></i></span>
+          <input type="number" step="any" class="form-control" id="visualizeLatitudeInputSidebar" placeholder="Latitude" min="-90" max="90" required readonly />
+      </div>
+  </div>
+   <div class="mb-3">
+    <label class="form-label fw-bold small">Temporal Resolution</label>
+    <div class="btn-group btn-group-sm w-100" role="group">
+      <input type="radio" class="btn-check" name="visualizeTemporalResolution" id="visualizeHourly" value="Hourly" autocomplete="off" checked />
+      <label class="btn btn-outline-primary" for="visualizeHourly">Hourly</label>
+      <input type="radio" class="btn-check" name="visualizeTemporalResolution" id="visualizeDaily" value="Daily" autocomplete="off" />
+      <label class="btn btn-outline-primary" for="visualizeDaily">Daily</label>
+      <input type="radio" class="btn-check" name="visualizeTemporalResolution" id="visualizeMonthly" value="Monthly" autocomplete="off" />
+      <label class="btn btn-outline-primary" for="visualizeMonthly">Monthly</label>
+    </div>
+  </div>
+  <div class="mb-3">
+    <label class="form-label fw-bold d-block small">Parameters</label>
+    <div class="btn-group btn-group-sm w-100 mb-2" role="group">
+      <input type="checkbox" class="btn-check visualize-param-gti" id="visualizeGhi" value="GHI" autocomplete="off" checked />
+      <label class="btn btn-outline-primary" for="visualizeGhi">GHI</label>
+      <input type="checkbox" class="btn-check visualize-param-gti" id="visualizeBhi" value="BHI" autocomplete="off" />
+      <label class="btn btn-outline-primary" for="visualizeBhi">BHI</label>
+      <input type="checkbox" class="btn-check visualize-param-gti" id="visualizeDhi" value="DHI" autocomplete="off" />
+      <label class="btn btn-outline-primary" for="visualizeDhi">DHI</label>
+      <input type="checkbox" class="btn-check visualize-param-gti gti-checkbox" id="visualizeGti" value="GTI" autocomplete="off" />
+      <label class="btn btn-outline-primary" for="visualizeGti">GTI</label>
+    </div>
+    <div class="mb-2 tilt-angle-field" style="display: none;">
+      <label for="visualizeTiltangle" class="form-label fw-bold small">Tilt Angle[°]</label>
+      <input type="number" class="form-control form-control-sm" id="visualizeTiltangle" min="0" max="90" value="30" step="0.1" />
+    </div>
+  </div>
+  <div class="form-group mb-3">
+    <label for="visualizeDataSource" class="form-label fw-bold small">Data Source:</label>
+    <select id="visualizeDataSource" name="visualizeDataSource" class="form-select form-select-sm" required>
+      <option value="" disabled selected>Select a data source...</option>
+      <option value="model">Empirical Model</option>
+      <option value="CAMS_RAD">CAMS Radiation Service</option>
+      <option value="NASA">NASA Power</option>
+      <option value="rf-model">Rf Model v1</option>
+    </select>
+  </div>
+  </aside>
+<!-------------Download ----------->
+<aside class="secondary-config-panel" id="downloadConfigPanel">
+  <div class="mb-3">
+    <div class="btn-group btn-group-sm w-100" role="group" aria-label="Time">
+      <input type="radio" class="btn-check" name="downloadTimeRangeType" value="date" id="downloadDate" autocomplete="off" checked>
+      <label class="btn btn-outline-secondary" for="downloadDate">Date Range</label>
+      <input type="radio" class="btn-check" name="downloadTimeRangeType" value="year" id="downloadYear" autocomplete="off">
+      <label class="btn btn-outline-secondary" for="downloadYear">Year Range</label>
+    </div>
+    <div id="downloadDateRangeFields" class="mt-2">
+      <div class="input-group input-group-sm mb-2">
+        <input type="text" class="form-control datepicker" id="downloadStartDate" placeholder="Start Date" />
+        <span class="input-group-text"><i class="bi bi-calendar"></i></span>
+      </div>
+      <div class="input-group input-group-sm">
+        <input type="text" class="form-control datepicker" id="downloadEndDate" placeholder="End Date" />
+        <span class="input-group-text"><i class="bi bi-calendar"></i></span>
+      </div>
+    </div>
+    <div id="downloadYearRangeFields" style="display: none;" class="mt-2">
+      <div class="form-floating mb-2">
+        <input class="form-control form-control-sm" type="number" id="downloadStartYear" name="downloadStartYear" min="2000" max="2050" value="2020" placeholder=" ">
+        <label for="downloadStartYear">Start Year</label>
+      </div>
+      <div class="form-floating">
+        <input class="form-control form-control-sm" type="number" id="downloadEndYear" name="downloadEndYear" min="2000" max="2050" step="1" placeholder=" ">
+        <label for="downloadEndYear">End Year</label>
+      </div>
+    </div>
+  </div>
+  <div class="mb-3">
+      <label class="form-label fw-bold small">Location (from map click)</label>
+      <div class="input-group input-group-sm mb-2">
+           <span class="input-group-text"><i class="bi bi-geo-alt"></i></span>
+          <input type="number" step="any" class="form-control" id="downloadLongitudeInputSidebar" placeholder="Longitude" min="-180" max="180" required readonly />
+      </div>
+       <div class="input-group input-group-sm">
+          <span class="input-group-text"><i class="bi bi-geo-alt-fill"></i></span>
+          <input type="number" step="any" class="form-control" id="downloadLatitudeInputSidebar" placeholder="Latitude" min="-90" max="90" required readonly />
+      </div>
+  </div>
+  <div class="mb-3">
+    <label class="form-label fw-bold small">Temporal Resolution</label>
+    <div class="btn-group btn-group-sm w-100" role="group">
+      <input type="radio" class="btn-check" name="downloadTemporalResolution" id="downloadHourly" value="Hourly" autocomplete="off" checked />
+      <label class="btn btn-outline-primary" for="downloadHourly">Hourly</label>
+      <input type="radio" class="btn-check" name="downloadTemporalResolution" id="downloadDaily" value="Daily" autocomplete="off" />
+      <label class="btn btn-outline-primary" for="downloadDaily">Daily</label>
+      <input type="radio" class="btn-check" name="downloadTemporalResolution" id="downloadMonthly" value="Monthly" autocomplete="off" />
+      <label class="btn btn-outline-primary" for="downloadMonthly">Monthly</label>
+    </div>
+  </div>
+   <div class="mb-3">
+    <label class="form-label fw-bold small">Output Format</label>
+    <div class="btn-group btn-group-sm w-100" role="group">
+      <input type="radio" class="btn-check" name="downloadOutputFormat" id="downloadCsv" value="CSV" autocomplete="off" checked />
+      <label class="btn btn-outline-primary" for="downloadCsv">CSV</label>
+      <input type="radio" class="btn-check" name="downloadOutputFormat" id="downloadJson" value="JSON" autocomplete="off" />
+      <label class="btn btn-outline-primary" for="downloadJson">JSON</label>
+    </div>
+  </div>
+  <div class="mb-3">
+    <label class="form-label fw-bold d-block small">Parameters</label>
+    <div class="btn-group btn-group-sm w-100 mb-2" role="group">
+      <input type="checkbox" class="btn-check download-param-gti" id="downloadGhi" value="GHI" autocomplete="off" checked />
+      <label class="btn btn-outline-primary" for="downloadGhi">GHI</label>
+      <input type="checkbox" class="btn-check download-param-gti" id="downloadBhi" value="BHI" autocomplete="off" />
+      <label class="btn btn-outline-primary" for="downloadBhi">BHI</label>
+      <input type="checkbox" class="btn-check download-param-gti" id="downloadDhi" value="DHI" autocomplete="off" />
+      <label class="btn btn-outline-primary" for="downloadDhi">DHI</label>
+      <input type="checkbox" class="btn-check download-param-gti gti-checkbox" id="downloadGti" value="GTI" autocomplete="off" />
+      <label class="btn btn-outline-primary" for="downloadGti">GTI</label>
+    </div>
+    <div class="mb-2 tilt-angle-field" style="display: none;">
+      <label for="downloadTiltangle" class="form-label fw-bold small">Tilt Angle[°]</label>
+      <input type="number" class="form-control form-control-sm" id="downloadTiltangle" min="0" max="90" value="30" step="0.1" />
+    </div>
+  </div>
+  
+  <div class="form-group mb-3">
+    <label for="downloadDataSource" class="form-label fw-bold small">Data Source:</label>
+    <select id="downloadDataSource" name="downloadDataSource" class="form-select form-select-sm" required>
+      <option value="" disabled selected>Select a data source...</option>
+      <option value="model">Empirical Model</option>
+      <option value="CAMS_RAD">CAMS Radiation Service</option>
+      <option value="NASA">NASA Power</option>
+    </select>
+  </div>
+  </aside>
+  
+<!----------------Map section ---------------------->
+
+    <main class="map-main-area" id="mapMainArea">
+        <div class="map-controls-overlay">
+            <div class="input-group input-group-sm">
+                <input type="text" class="form-control" id="searchInput" placeholder="Find address or place..." />
+                <button class="btn btn-outline-secondary" id="searchBtn"><i class="bi bi-search"></i></button>
+            </div>
+        </div>
+        <div id="map"></div>
+        <div class="map-coords-display">
+            <span id="selectedCoords">Selected: N/A</span> | Cursor: <span id="cursorCoords">0.00, 0.00</span>
+        </div>
+    </main>
+  </div>
+
+  <!-- Chart Modal -->
+  <div class="modal fade" id="chartModal" tabindex="-1" aria-labelledby="chartModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-xl modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="chartModalLabel"><i class="bi bi-graph-up me-2"></i>Irradiance Data</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="row g-3">
+                     <div class="col-md-4 mb-3 mb-md-0 summary-card">
+                        <h6 class="text-center mb-3 fw-bold">Request Summary</h6>
+                        <div class="card border-light shadow-sm h-100 bg-light text-dark">
+                            <div class="card-body small">
+                                <div class="mb-3">
+                                    <h6 class="d-flex align-items-center text-secondary mb-2">
+                                      <i class="bi bi-geo-alt-fill me-2"></i>Location
+                                    </h6>
+                                    <div class="d-flex justify-content-between align-items-center mb-1">
+                                      <span>Latitude:</span>
+                                      <span class="badge bg-primary rounded-pill badge-latitude">N/A</span>
+                                    </div>
+                                    <div class="d-flex justify-content-between align-items-center">
+                                      <span>Longitude:</span>
+                                      <span class="badge bg-primary rounded-pill badge-longitude">N/A</span>
+                                    </div>
+                                </div>
+                                <div class="mb-3">
+                                    <h6 class="d-flex align-items-center text-secondary mb-2">
+                                      <i class="bi bi-calendar-range-fill me-2"></i>Time Parameters
+                                    </h6>
+                                    <div class="d-flex justify-content-between align-items-center mb-1">
+                                      <span>Granularity:</span>
+                                      <span class="text-muted text-granularity">N/A</span>
+                                    </div>
+                                    <div class="d-flex justify-content-between align-items-center mb-1">
+                                      <span>Start Date:</span>
+                                      <span class="text-muted text-start-date">N/A</span>
+                                    </div>
+                                    <div class="d-flex justify-content-between align-items-center">
+                                      <span>End Date:</span>
+                                      <span class="text-muted text-end-date">N/A</span>
+                                    </div>
+                                </div>
+                                <div>
+                                    <h6 class="d-flex align-items-center text-secondary mb-2">
+                                      <i class="bi bi-database-fill-check me-2"></i>Data Source
+                                    </h6>
+                                    <div class="d-flex align-items-center">
+                                      <span class="text-muted text-data-source">N/A</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="card-footer bg-white border-0 small text-muted text-center">
+                              <i class="bi bi-info-circle me-1"></i>
+                              <span class="summary-update-time">Summary not generated</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-8">
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <h6 class="text-center mb-0 fw-bold">Irradiance Chart</h6>
+                            <button class="btn btn-sm btn-outline-secondary" id="downloadPdfBtn"> 
+                              <i class="bi bi-image me-1"></i>Download Chart (PNG)
+                            </button>
+                        </div>
+                        <div class="chart-container border rounded p-2" style="position: relative; height: 400px;"> 
+                          <canvas id="irradianceChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+  </div>
+
+  <!-- Footer -->
+  <footer class="bg-dark text-white py-5 mt-auto footer-container border-top border-secondary" style="display: none;">
+    <div class="container-fluid">
+      <div class="row g-4 text-center text-md-start">
+        <!-- Developed By -->
+        <div class="col-md-4 mb-4 mb-md-0">
+          <h5 class="fw-bold mb-3 text-primary">Developed by</h5>
+          <div class="d-flex align-items-center justify-content-center justify-content-md-start">
+            <img src="/static/logos/marconi_mak.png" alt="MARCONI LAB@MAK" class="footer-logo me-3"
+              style="height: 60px; width: auto;">
+          </div><br>
+          <div class="text-white small">
+            MARCONI Research Lab<br>
+            Makerere University
+          </div>
+        </div>
+
+        <!-- Partners -->
+        <div class="col-md-4 mb-4 mb-md-0">
+          <h5 class="fw-bold mb-3 text-primary">Partners</h5>
+          <div class="d-flex flex-wrap align-items-center justify-content-center justify-content-md-start gap-3">
+            <img src="/static/logos/giz.png" alt="GIZ" class="partner-logo" style="height: 80px; width: auto;">
+            <object data="/static/logos/cross.svg" type="image/svg+xml" class="partner-logo"
+              style="height: 40px; width: auto;">
+              <img src="/static/logos/cross_boundary.png" alt="CrossBoundary Energy Fallback">
+            </object>
+          </div>
+        </div>
+
+        <!-- Contact Us -->
+        <div class="col-md-4">
+          <h5 class="fw-bold mb-3 text-primary">Contact Us</h5>
+          <div class="text-muted">
+            <address class="mb-3 text-white">
+              Makerere University<br>
+              College of Engineering, Design, Art & Technology<br>
+              Old Building, Room 171
+            </address>
+            <ul class="list-unstyled">
+              <li class="mb-2">
+                <a href="mailto:andrew.katumba@mak.ac.ug" class="text-white text-decoration-none hover-text-primary">
+                  <i class="bi bi-envelope me-2"></i>andrew.katumba@mak.ac.ug
+                </a>
+              </li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+  <!-- Scripts -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns/dist/chartjs-adapter-date-fns.bundle.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/choices.js/public/assets/scripts/choices.min.js"></script>
+
+
+<script>
+ document.addEventListener('DOMContentLoaded', function () {
+  // Initialize date pickers
+  flatpickr(".datepicker", {
+    dateFormat: "Y-m-d",
+    altInput: true,
+    altFormat: "d/m/Y",
+  });
+
+  // GTI checkbox toggle for tilt angle field - works for both panels
+  document.querySelectorAll('.gti-checkbox').forEach(checkbox => {
+    // Initialize each panel
+    const panel = checkbox.closest('.secondary-config-panel');
+    const tiltAngleField = panel.querySelector('.tilt-angle-field');
+    tiltAngleField.style.display = checkbox.checked ? 'block' : 'none';
+    
+    // Add event listener
+    checkbox.addEventListener('change', function() {
+      tiltAngleField.style.display = this.checked ? 'block' : 'none';
+    });
+  });
+
+  // Initialize map
+  var map;
+  function initializeMap() {
+    map = L.map('map').setView([0,0], 2);
+    L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',
+        subdomains: 'abcd', 
+        maxZoom: 19
+    }).addTo(map);
+
+    // Mouse move event for cursor coordinates
+    map.on('mousemove', function(e) {
+        const lat = e.latlng.lat.toFixed(4);
+        const lng = e.latlng.lng.toFixed(4);
+        const cursorCoordsEl = document.getElementById('cursorCoords');
+        if(cursorCoordsEl) cursorCoordsEl.textContent = `${lat}, ${lng}`;
+    });
+
+    // Click event for selecting coordinates
+    map.on('click', function(e) {
+        const lat = e.latlng.lat.toFixed(4);
+        const lng = e.latlng.lng.toFixed(4);
+        const selectedCoordsEl = document.getElementById('selectedCoords');
+        if(selectedCoordsEl) selectedCoordsEl.textContent = `Selected: ${lat}, ${lng}`;
+        
+        // Update sidebar inputs in both panels
+        document.querySelectorAll('.latitude-input').forEach(input => {
+          input.value = lat;
+        });
+        document.querySelectorAll('.longitude-input').forEach(input => {
+          input.value = lng;
+        });
+
+        // Update modal badges
+        const badgeLat = document.querySelector('.badge-latitude');
+        const badgeLon = document.querySelector('.badge-longitude');
+        if(badgeLat) badgeLat.textContent = lat;
+        if(badgeLon) badgeLon.textContent = lng;
+    });
+  }
+  
+  if(document.getElementById('map')) {
+    initializeMap();
+  }
+
+  // Panel management functions
+  function showPanel(panelId) {
+    // Hide all panels
+    document.querySelectorAll('.secondary-config-panel').forEach(panel => {
+      panel.classList.remove('visible');
+    });
+    // Show requested panel
+    const panel = document.getElementById(panelId);
+    if (panel) panel.classList.add('visible');
+    // Update map size
+    if (map) setTimeout(() => map.invalidateSize(), 310);
+  }
+
+  function closeAllPanels() {
+    document.querySelectorAll('.secondary-config-panel').forEach(panel => {
+      panel.classList.remove('visible');
+    });
+    if (map) setTimeout(() => map.invalidateSize(), 310);
+  }
+
+  // Event listeners for sidebar links
+  const visualizeLink = document.getElementById('visualizeConfigLink');
+  const downloadLink = document.getElementById('downloadConfigLink');
+  
+  if (visualizeLink) {
+    visualizeLink.addEventListener('click', function(e) {
+      e.preventDefault();
+      showPanel('visualizeConfigPanel');
+    });
+  }
+  
+  if (downloadLink) {
+    downloadLink.addEventListener('click', function(e) {
+      e.preventDefault();
+      showPanel('downloadConfigPanel');
+    });
+  }
+
+  // Close buttons for panels
+  document.querySelectorAll('.configPanelCloseBtn').forEach(btn => {
+    btn.addEventListener('click', closeAllPanels);
+  });
+
+  // Collapse sidebar
+  const collapseSidebarBtn = document.getElementById('collapseSidebarBtn');
+  const primarySidebar = document.getElementById('primarySidebar');
+  
+  if(collapseSidebarBtn && primarySidebar) {
+      collapseSidebarBtn.addEventListener('click', function() {
+          primarySidebar.classList.toggle('collapsed');
+          if(map) {
+              setTimeout(() => map.invalidateSize(), 310);
+          }
+      });
+  }
+
+  // Chart modal
+  const visualizeBtnTrigger = document.getElementById('visualizeBtnInPanel');
+  const chartModalEl = document.getElementById('chartModal');
+  let chartModalInstance;
+  
+  if (chartModalEl) {
+      chartModalInstance = new bootstrap.Modal(chartModalEl);
+  }
+
+  if (visualizeBtnTrigger && chartModalInstance) {
+    visualizeBtnTrigger.addEventListener('click', function(event) {
+      event.preventDefault();
+      chartModalInstance.show();
+    });
+  }
+  
+  // Time range type toggle (for both panels)
+  document.querySelectorAll('input[name="timeRangeType"]').forEach(radio => {
+    // Initialize each panel
+    const panel = radio.closest('.secondary-config-panel');
+    const dateRangeFields = panel.querySelector('.date-range-fields');
+    const yearRangeFields = panel.querySelector('.year-range-fields');
+    
+    // Set initial state
+    if(radio.checked) {
+      if(radio.value === 'date') {
+        dateRangeFields.style.display = 'block';
+        yearRangeFields.style.display = 'none';
+      } else {
+        dateRangeFields.style.display = 'none';
+        yearRangeFields.style.display = 'block';
+      }
+    }
+    
+    // Add event listener
+    radio.addEventListener('change', function() {
+      if (this.value === 'date') {
+        dateRangeFields.style.display = 'block';
+        yearRangeFields.style.display = 'none';
+      } else if (this.value === 'year') {
+        dateRangeFields.style.display = 'none';
+        yearRangeFields.style.display = 'block';
+      }
+    });
+  });
+});
+  </script>  
